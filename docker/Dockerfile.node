@@ -10,9 +10,5 @@ RUN npm install -g pnpm
 RUN \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  apt-get update
-
-RUN \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  apt install -y git vim
+  apt-get update && \
+  apt install -y git vim make
