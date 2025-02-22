@@ -83,7 +83,7 @@
 	}
 
 	.red {
-		color: var(--st-color-text-red);
+		color: var(--hu-color-text-red);
 	}
 
 	label {
