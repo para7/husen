@@ -42,7 +42,7 @@
 </script>
 
 <div class="container">
-	<h1>Proto Stlatica</h1>
+	<h1>Husen</h1>
 	<h2>Login</h2>
 
 	<form method="post" {onsubmit}>

@@ -29,7 +29,7 @@ export const SERVERS = {
  * ACTIONS
  */
 export const ACTIONS = {
-  
+  "default /login/signup": `/login/signup`
 }
 
 /**
@@ -114,7 +114,7 @@ export const currentSp = () => {
 export type KIT_ROUTES = {
   PAGES: { '/': never, '/login': never, '/login/signup': never, '/profile/[userid]': 'userid', '/proto/api': never }
   SERVERS: Record<string, never>
-  ACTIONS: Record<string, never>
+  ACTIONS: { 'default /login/signup': never }
   LINKS: Record<string, never>
   Params: { 'userid': never }
 }

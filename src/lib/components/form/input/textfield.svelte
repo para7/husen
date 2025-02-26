@@ -5,12 +5,10 @@
 		customProp?: boolean;
 	} & HTMLInputAttributes;
 
-	let props: Props = $props();
-
-	// console.log({ ...props });
+	let { value = $bindable(''), ...props } = $props();
 </script>
 
-<input {...props} />
+<input bind:value {...props} />
 
 <style>
 	input {

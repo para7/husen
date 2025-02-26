@@ -1,81 +1,52 @@
 <script lang="ts">
 	import { PAGES } from '$lib/routes/ROUTES';
 	import Textfield from '$lib/components/form/input/textfield.svelte';
-	import * as v from 'valibot';
-	import { goto } from '$app/navigation';
 	import Button from '$lib/components/material/button/button.svelte';
+	import { superForm } from 'sveltekit-superforms/client';
+	import type { PageData } from './$types';
+	import { goto } from '$app/navigation';
 
-	const loginSchema = v.object({
-		id: v.string(),
-		password: v.string()
+	export let data: PageData;
+
+	const { form, errors, enhance, submitting } = superForm(data.form, {
+		onResult: ({ result }) => {
+			if (result.type === 'success') {
+				goto(PAGES['/profile/[userid]']({ userid: $form.id }));
+			}
+		}
 	});
-
-	let loading = false;
-	let message = '';
-
-	const onsubmit = async (e: SubmitEvent) => {
-		if (loading) {
-			return;
-		}
-
-		try {
-			message = '';
-			loading = true;
-			e.preventDefault();
-
-			const formData = new FormData(e.target as HTMLFormElement);
-
-			const values = v.parse(loginSchema, {
-				id: formData.get('id'),
-				password: formData.get('password')
-			});
-
-			console.log(values);
-
-			// const res = await supabase.auth.signUp({
-			// 	email: values.id,
-			// 	password: values.password
-			// });
-
-			// console.log(res);
-			// if (res.error !== null) {
-			// 	console.log(res.error);
-			// 	message = `${res.error.message}`;
-			// 	return;
-			// }
-
-			goto(PAGES['/profile/[userid]']({ userid: values.id }));
-		} catch (e) {
-			message = String(e);
-		} finally {
-			loading = false;
-		}
-	};
 </script>
 
 <div class="container">
-	<h1>Proto Stlatica</h1>
+	<h1>Husen</h1>
 	<h2>Signup</h2>
 
-	<form method="post" {onsubmit}>
+	<form method="post" use:enhance>
 		<div class="container">
 			<p class="line">
-				<label class="textlabel" for="id"> ID (email) </label>
-				<Textfield value="hoge" id="id" name="id" />
+				<label class="textlabel" for="id">ID (email)</label>
+				<Textfield id="id" name="id" bind:value={$form.id} error={$errors.id?.[0]} />
+				{#if $errors.id}
+					<span class="error">{$errors.id[0]}</span>
+				{/if}
 			</p>
 
 			<p class="line">
-				<label class="textlabel" for="password"> Password </label>
-				<Textfield value="hoge" id="password" name="password" type="password" />
+				<label class="textlabel" for="password">Password</label>
+				<Textfield
+					id="password"
+					name="password"
+					type="password"
+					bind:value={$form.password}
+					error={$errors.password?.[0]}
+				/>
+				{#if $errors.password}
+					<span class="error">{$errors.password[0]}</span>
+				{/if}
 			</p>
 
-			<!-- <p class="line">
-				<label class="textlabel" for="invite"> Invite Code </label>
-				<Textfield value="hoge" id="invite" name="invite_code" type="password" />
-			</p> -->
-
 			<Button variant="outlined" type="submit">
-				{#if loading}
+				{#if $submitting}
 					Loading...
 				{:else}
 					Register
@@ -85,16 +56,13 @@
 	</form>
 
 	<div>
-		<a href={PAGES['/login']}> ログインへ戻る</a>
-	</div>
-
-	<div class="red">
-		{message}
+		<a href={PAGES['/login']}>ログインへ戻る</a>
 	</div>
 
 	<p class="notice">
 		本プロジェクトは試作版です。<br />
-		予告なくデータ削除・サービス停止する場合がございます。<br />あらかじめご了承ください。
+		予告なくデータ削除・サービス停止する場合がございます。<br />
+		あらかじめご了承ください。
 	</p>
 </div>
 
@@ -126,5 +94,10 @@
 		gap: 1em;
 		width: 100%;
 		align-items: center;
+	}
+
+	.error {
+		color: var(--hu-color-text-red);
+		margin: 0;
 	}
 </style>
