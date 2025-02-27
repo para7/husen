@@ -18,3 +18,16 @@ services:
       LANG: ja_JP.UTF-8
       LC_CTYPE: ja_JP.UTF-8
     tty: true
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: husendb
+    ports:
+      - '5432:5432'
+    volumes:
+      - husen_data:/var/lib/postgresql/data
+
+volumes:
+  husen_data:

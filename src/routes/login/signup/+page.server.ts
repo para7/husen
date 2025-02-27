@@ -4,7 +4,7 @@ import * as v from 'valibot';
 import { valibot } from 'sveltekit-superforms/adapters';
 
 const signupSchema = v.object({
-	id: v.pipe(v.string(), v.email('有効なメールアドレスを入力してください')),
+	id: v.pipe(v.string(), v.minLength(4, 'IDは4文字以上である必要があります')),
 	password: v.pipe(v.string(), v.minLength(8, 'パスワードは8文字以上である必要があります'))
 });
 

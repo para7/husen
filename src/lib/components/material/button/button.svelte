@@ -5,9 +5,9 @@
 
 	let { children, onclick, fullwidth, variant = 'outlined', ...others }: Props = $props();
 
-	console.log(fullwidth);
+	// console.log(fullwidth);
 	const classNames = [fullwidth ? 'fullwidth' : '', variant].join(' ');
-	console.log(classNames);
+	// console.log(classNames);
 </script>
 
 <button class={`button-base ${classNames}`} {onclick} {...others}>

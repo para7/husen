@@ -34,7 +34,8 @@
 	// "forwardPorts": [],
 	// Uncomment the next line if you want start specific services in your Docker Compose config.
 	"runServices": [
-		"dev"
+		"dev",
+		"postgres"
 	],
 	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
 	// "shutdownAction": "none",
