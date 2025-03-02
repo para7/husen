@@ -19,7 +19,7 @@ services:
       LC_CTYPE: ja_JP.UTF-8
     tty: true
   postgres:
-    image: postgres:17
+    image: postgres:17.4
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

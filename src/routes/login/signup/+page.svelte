@@ -24,10 +24,23 @@
 	<form method="post" use:enhance>
 		<div class="container">
 			<p class="line">
-				<label class="textlabel" for="id">ID (email)</label>
+				<label class="textlabel" for="id">ID</label>
 				<Textfield id="id" name="id" bind:value={$form.id} error={$errors.id?.[0]} />
 				{#if $errors.id}
 					<span class="error">{$errors.id[0]}</span>
+				{/if}
+			</p>
+
+			<p class="line">
+				<label class="textlabel" for="username">Username</label>
+				<Textfield
+					id="username"
+					name="username"
+					bind:value={$form.username}
+					error={$errors.username?.[0]}
+				/>
+				{#if $errors.username}
+					<span class="error">{$errors.username[0]}</span>
 				{/if}
 			</p>
 
@@ -42,6 +55,20 @@
 				/>
 				{#if $errors.password}
 					<span class="error">{$errors.password[0]}</span>
+				{/if}
+			</p>
+
+			<p class="line">
+				<label class="textlabel" for="confirmPassword">Confirm Password</label>
+				<Textfield
+					id="confirmPassword"
+					name="confirmPassword"
+					type="password"
+					bind:value={$form.confirmPassword}
+					error={$errors.confirmPassword?.[0]}
+				/>
+				{#if $errors.confirmPassword}
+					<span class="error">{$errors.confirmPassword[0]}</span>
 				{/if}
 			</p>
 

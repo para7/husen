@@ -1,13 +1,15 @@
 import * as p from 'drizzle-orm/pg-core';
 
 export const users = p.pgTable('users', {
-	id: p.uuid().primaryKey()
+	uuid: p.uuid().primaryKey(),
+	user_id: p.text().unique(),
+	username: p.text().notNull().unique()
 });
 
 export const credentials = p.pgTable('credentials', {
-	id: p
+	uuid: p
 		.uuid()
 		.primaryKey()
-		.references(() => users.id),
-	password: p.text()
+		.references(() => users.uuid),
+	password_hash: p.text().notNull()
 });
