@@ -1,0 +1,13 @@
+@import '@radix-ui/colors/gray-dark.css';
+@import '@radix-ui/colors/blue-dark.css';
+@import '@radix-ui/colors/green-dark.css';
+@import '@radix-ui/colors/red-dark.css';
+
+/* hu = husen */
+:root {
+	/* colors */
+	--hu-color-bg: var(--gray-1);
+
+	--hu-color-text: var(--gray-12);
+	--hu-color-text-red: var(--red-11);
+}

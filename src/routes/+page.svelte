@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<a href="login">login</a>
+<a href="profile/hoge">profile</a>
+<a href="proto/api">proto/api</a>
+<a href="login">login</a>
+
+<style>
+	a {
+		display: block;
+	}
+</style>
