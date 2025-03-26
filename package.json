@@ -17,6 +17,7 @@
   "dependencies": {
     "@react-router/cloudflare": "^7.0.1",
     "@react-router/fs-routes": "^7.0.1",
+    "drizzle-orm": "^0.41.0",
     "hono": "^4.6.9",
     "hono-react-router-adapter": "^0.6.5",
     "isbot": "^4.1.0",
