@@ -1,8 +1,14 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "example-cloudflare-workers"
+name = "husen"
 compatibility_date = "2024-11-06"
 main = "./worker.ts"
 assets = { directory = "./build/client" }
 
 [vars]
 MY_VAR = "My Value"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "husen"
+database_id = "f2d2c4ef-67af-4671-904a-986d9fcee5cf"
+migrations_dir = "drizzle"
