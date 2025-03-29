@@ -1,51 +1,55 @@
 {
-  "name": "example-cloudflare-workers",
-  "private": true,
-  "sideEffects": false,
-  "type": "module",
-  "scripts": {
-    "build": "react-router build",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply --local DB",
-    "db:migrate-production": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "deploy": "pnpm run build && pnpm run db:migrate-production && wrangler deploy",
-    "dev": "react-router dev",
-    "dk": "drizzle-kit",
-    "preview": "pnpm run build && wrangler dev",
-    "start": "wrangler dev",
-    "test:e2e:vite": "playwright test -c playwright-vite.config.ts e2e.test.ts",
-    "test:e2e:workers": "pnpm run build && playwright test -c playwright-workers.config.ts e2e.test.ts",
-    "typecheck": "react-router typegen && tsc",
-    "typegen": "react-router typegen"
-  },
-  "dependencies": {
-    "@react-router/cloudflare": "^7.0.1",
-    "@react-router/fs-routes": "^7.0.1",
-    "drizzle-orm": "^0.41.0",
-    "hono": "^4.6.9",
-    "hono-react-router-adapter": "^0.6.5",
-    "isbot": "^4.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router": "^7.0.1"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250327.0",
-    "@hono/vite-dev-server": "^0.18.1",
-    "@playwright/test": "^1.48.2",
-    "@react-router/dev": "^7.0.1",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "dotenv-cli": "^8.0.0",
-    "drizzle-kit": "^0.30.6",
-    "playwright": "^1.47.0",
-    "typescript": "^5.1.6",
-    "vite": "^6.0.7",
-    "vite-tsconfig-paths": "^5.1.4",
-    "wrangler": "^3.86.0"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  }
+	"name": "husen",
+	"private": true,
+	"sideEffects": false,
+	"type": "module",
+	"scripts": {
+		"build": "react-router build",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "wrangler d1 migrations apply --local DB",
+		"db:migrate-production": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio",
+		"deploy": "pnpm run build && pnpm run db:migrate-production && wrangler deploy",
+		"dev": "react-router dev",
+		"dk": "drizzle-kit",
+		"format": "biome check --write",
+		"preview": "pnpm run build && wrangler dev",
+		"start": "wrangler dev",
+		"test:e2e:vite": "playwright test -c playwright-vite.config.ts e2e.test.ts",
+		"test:e2e:workers": "pnpm run build && playwright test -c playwright-workers.config.ts e2e.test.ts",
+		"typecheck": "react-router typegen && tsc",
+		"typegen": "react-router typegen"
+	},
+	"dependencies": {
+		"@react-router/cloudflare": "^7.0.1",
+		"@react-router/fs-routes": "^7.0.1",
+		"drizzle-orm": "^0.41.0",
+		"hono": "^4.6.9",
+		"hono-react-router-adapter": "^0.6.5",
+		"isbot": "^4.1.0",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"react-router": "^7.0.1",
+		"remove": "^0.1.5"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@cloudflare/workers-types": "^4.20250327.0",
+		"@hono/vite-dev-server": "^0.18.1",
+		"@playwright/test": "^1.48.2",
+		"@react-router/dev": "^7.0.1",
+		"@types/react": "^18.2.20",
+		"@types/react-dom": "^18.2.7",
+		"dotenv": "^16.4.7",
+		"dotenv-cli": "^8.0.0",
+		"drizzle-kit": "^0.30.6",
+		"playwright": "^1.47.0",
+		"typescript": "^5.1.6",
+		"vite": "^6.0.7",
+		"vite-tsconfig-paths": "^5.1.4",
+		"wrangler": "^3.86.0"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
 }
