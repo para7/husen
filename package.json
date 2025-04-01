@@ -21,6 +21,8 @@
 		"typegen": "react-router typegen"
 	},
 	"dependencies": {
+		"@auth/core": "^0.38.0",
+		"@hono/auth-js": "^1.0.15",
 		"@react-router/cloudflare": "^7.0.1",
 		"@react-router/fs-routes": "^7.0.1",
 		"drizzle-orm": "^0.41.0",
