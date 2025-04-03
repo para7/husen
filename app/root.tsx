@@ -1,6 +1,6 @@
-import "@mantine/core/styles.css";
 import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
-import { Outlet, Scripts } from "react-router";
+import "@mantine/core/styles.css";
+import { Links, Meta, Outlet, Scripts } from "react-router";
 
 const theme = createTheme({
 	/** Put your mantine theme override here */
@@ -11,8 +11,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 		<html lang="en">
 			<head>
 				<meta charSet="utf-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-
+				<meta name="viewport" content="width=device-width, initial-scale=1" />{" "}
+				<Meta />
+				<Links />
 				<ColorSchemeScript />
 			</head>
 			<body>
