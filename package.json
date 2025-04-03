@@ -23,6 +23,8 @@
 	"dependencies": {
 		"@auth/core": "^0.38.0",
 		"@hono/auth-js": "^1.0.15",
+		"@mantine/core": "^7.17.3",
+		"@mantine/hooks": "^7.17.3",
 		"@react-router/cloudflare": "^7.0.1",
 		"@react-router/fs-routes": "^7.0.1",
 		"drizzle-orm": "^0.41.0",
@@ -46,6 +48,9 @@
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "^0.30.6",
 		"playwright": "^1.47.0",
+		"postcss": "^8.5.3",
+		"postcss-preset-mantine": "^1.17.0",
+		"postcss-simple-vars": "^7.0.1",
 		"typescript": "^5.1.6",
 		"vite": "^6.0.7",
 		"vite-tsconfig-paths": "^5.1.4",

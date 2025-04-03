@@ -22,7 +22,8 @@
 				"svelte.svelte-vscode",
 				"esbenp.prettier-vscode",
 				"dbaeumer.vscode-eslint",
-				"biomejs.biome"
+				"biomejs.biome",
+				"vunguyentuan.vscode-css-variables"
 			]
 		}
 	},

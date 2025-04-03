@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/d1";
 import type { Route } from "./+types/_index";
 import { usersTable } from "server/db/schema";
 import SignOutButton from "app/lib/SignOutButton";
+import { Button } from "@mantine/core";
 export const loader = async (args: Route.LoaderArgs) => {
 	const extra = args.context.extra;
 	const cloudflare = args.context.cloudflare;
@@ -29,6 +30,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 			<h4>Extra is {extra}</h4>
 			<h5>Var in Variables is {myVarInVariables}</h5>
 			<h6>waitUntil is {isWaitUntilDefined ? "defined" : "not defined"}</h6>
+			<Button>Click me</Button>
 			<SignOutButton />
 			<pre>{JSON.stringify(result, null, 2)}</pre>
 		</div>
