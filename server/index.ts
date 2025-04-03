@@ -32,8 +32,15 @@ app.use(
 
 app.use("/api/auth/*", authHandler());
 
-// 全てのページで認証を必須にする
-app.use("*", verifyAuth());
+// ルートページ以外で認証を必須にする
+app.use("*", async (c, next) => {
+	if (c.req.path === "/") {
+		await next();
+		return;
+	}
+	await verifyAuth()(c, next);
+});
+// app.use("*", verifyAuth());
 
 app.onError((err, c) => {
 	if (err instanceof HTTPException && err.status === 401) {
@@ -43,7 +50,7 @@ app.onError((err, c) => {
 	return c.text("Other Error", 500);
 });
 
-app.get("/test-api", async (c) => {
+app.get("/api/test", async (c) => {
 	const db = drizzle(c.env.DB);
 
 	const writeResult = await db.insert(usersTable).values({
