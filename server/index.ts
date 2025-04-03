@@ -2,6 +2,9 @@ import { drizzle } from "drizzle-orm/d1";
 // server/index.ts
 import { Hono } from "hono";
 import { usersTable } from "./db/schema";
+import Google from "@auth/core/providers/google";
+import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
+import { HTTPException } from "hono/http-exception";
 
 const app = new Hono<{
 	Bindings: {
@@ -19,16 +22,42 @@ app.use(async (c, next) => {
 	c.header("X-Powered-By", "React Router and Hono");
 });
 
-app.get("/api", async (c) => {
+app.use(
+	"*",
+	initAuthConfig((c) => ({
+		secret: c.env.AUTH_SECRET,
+		providers: [Google],
+	})),
+);
+
+app.use("/api/auth/*", authHandler());
+
+// ルートページ以外で認証を必須にする
+app.use("*", async (c, next) => {
+	if (c.req.path === "/") {
+		await next();
+		return;
+	}
+	await verifyAuth()(c, next);
+});
+// app.use("*", verifyAuth());
+
+app.onError((err, c) => {
+	if (err instanceof HTTPException && err.status === 401) {
+		return c.redirect("/api/auth/signin");
+	}
+
+	return c.text("Other Error", 500);
+});
+
+app.get("/api/test", async (c) => {
 	const db = drizzle(c.env.DB);
 
 	const writeResult = await db.insert(usersTable).values({
 		name: "John Doe",
 		age: Math.floor(Math.random() * 100),
 	});
-	console.log(writeResult);
 	const result = await db.select().from(usersTable);
-	console.log(result);
 
 	return c.json({
 		message: "Hello",
