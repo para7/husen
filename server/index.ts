@@ -1,10 +1,10 @@
+import Google from "@auth/core/providers/google";
+import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
 import { drizzle } from "drizzle-orm/d1";
 // server/index.ts
 import { Hono } from "hono";
-import { usersTable } from "./db/schema";
-import Google from "@auth/core/providers/google";
-import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
 import { HTTPException } from "hono/http-exception";
+import { usersTable } from "./db/schema";
 
 const app = new Hono<{
 	Bindings: {
@@ -42,12 +42,26 @@ app.use("*", async (c, next) => {
 });
 // app.use("*", verifyAuth());
 
+app.use("*", async (c, next) => {
+	const authUser = c.get("authUser");
+
+	console.log("authUser", authUser);
+
+	await next();
+});
+
 app.onError((err, c) => {
 	if (err instanceof HTTPException && err.status === 401) {
 		return c.redirect("/api/auth/signin");
 	}
 
 	return c.text("Other Error", 500);
+});
+
+app.get("/api/get-auth", async (c) => {
+	const auth = c.get("authUser");
+
+	return c.text(`Hello, ${auth.session.user?.name}`);
 });
 
 app.get("/api/test", async (c) => {

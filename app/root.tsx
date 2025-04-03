@@ -1,6 +1,6 @@
 import "@mantine/core/styles.css";
+import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
 import { Outlet, Scripts } from "react-router";
-import { ColorSchemeScript, createTheme, MantineProvider } from "@mantine/core";
 
 const theme = createTheme({
 	/** Put your mantine theme override here */
