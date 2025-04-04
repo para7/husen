@@ -34,7 +34,7 @@ export default function SignUp() {
 								required
 							/>
 
-							<Button type="submit" fullWidth mt="xl">
+							<Button variant="gradient" type="submit" fullWidth mt="xl">
 								登録する
 							</Button>
 						</Stack>

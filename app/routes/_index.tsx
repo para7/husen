@@ -1,7 +1,5 @@
 import { Button, Container, Stack, Title } from "@mantine/core";
-import SignOutButton from "app/lib/SignOutButton";
-import { drizzle } from "drizzle-orm/d1";
-import { usersTable } from "server/db/schema";
+import { Text } from "@mantine/core";
 import type { Route } from "./+types/_index";
 export const loader = async (args: Route.LoaderArgs) => {
 	// const extra = args.context.extra;
@@ -33,16 +31,23 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				justifyContent: "center",
 			}}
 		>
-			<Stack align="center" gap="xl">
-				<Stack align="center" gap="xs">
-					<Title order={1} m={0}>
-						Husen
-					</Title>
-					<div>付箋</div>
+			<Stack>
+				<Stack align="center" gap="xl">
+					<Stack align="center" gap="xs">
+						<Title order={1} m={0}>
+							Husen
+						</Title>
+						<Text>付箋</Text>
+						<Text>後から張り替え自由のマイクロブログ</Text>
+					</Stack>
+
+					<Button component="a" href="/signup" variant="gradient">
+						はじめる
+					</Button>
 				</Stack>
 
-				<Button component="a" href="/signup" variant="filled" color="blue">
-					はじめる
+				<Button component="a" href="/about" variant="transparent">
+					Husen とは？
 				</Button>
 			</Stack>
 		</Container>

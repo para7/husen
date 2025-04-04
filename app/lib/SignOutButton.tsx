@@ -2,10 +2,12 @@ import { Button } from "@mantine/core";
 
 type SignOutButtonProps = {
 	text?: string;
+	variant?: string;
 };
 
 export default function SignOutButton({
 	text = "サインアウト",
+	variant = "light",
 }: SignOutButtonProps) {
 	return (
 		<>
@@ -13,7 +15,7 @@ export default function SignOutButton({
 				<button type="submit">サインアウト</button>
 			</form> */}
 			<div>
-				<Button component="a" variant="outline" href="/api/auth/signout">
+				<Button component="a" variant={variant} href="/api/auth/signout">
 					{text}
 				</Button>
 			</div>
