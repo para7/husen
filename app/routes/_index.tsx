@@ -44,6 +44,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				<Button component="a" href="/signup" variant="filled" color="blue">
 					はじめる
 				</Button>
+
+				<SignOutButton />
 			</Stack>
 		</Container>
 	);
