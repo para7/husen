@@ -14,7 +14,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
 	// console.dir(args.context);
 	// console.dir(args.context.hono);
-	console.dir(args.context.hono.context.get("authUser"));
+	// console.dir(args.context.hono.context.get("authUser"));
 
 	return {};
 	// return { cloudflare, extra, myVarInVariables, isWaitUntilDefined, result };
@@ -44,8 +44,6 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				<Button component="a" href="/signup" variant="filled" color="blue">
 					はじめる
 				</Button>
-
-				<SignOutButton />
 			</Stack>
 		</Container>
 	);

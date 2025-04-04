@@ -1,12 +1,9 @@
 import Google from "@auth/core/providers/google";
 import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
-import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-// server/index.ts
 import { type Context, Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { usersTable } from "./db/schema";
-import { eq, lt, gte, ne } from "drizzle-orm";
+import { url } from "valibot";
 import { AuthState } from "~/lib/domain/AuthState";
 
 type HonoContextVars = {
@@ -33,55 +30,56 @@ app.use(
 	initAuthConfig((c) => ({
 		secret: c.env.AUTH_SECRET,
 		providers: [Google],
+		// callbacks: {
+		// 	// signIn: async () => {
+		// 	// 	console.log("signIn function called");
+		// 	// 	return "http://localhost:3000/signup";
+		// 	// },
+		// },
 	})),
 );
 
 app.use("/api/auth/*", authHandler());
 
-// ルートページ以外で認証を必須にする
+const unauthedRoutes = ["/", "/about"];
+
+// すべてのルートで認証情報を取得するが、unauthedRoutesでは認証を必須としない
 app.use("*", async (c, next) => {
-	if (c.req.path === "/") {
-		await next();
-		return;
+	try {
+		// 認証を試みる
+		await verifyAuth()(c, next);
+	} catch (e) {
+		console.warn("catch!");
+		// unauthedRoutesの場合は認証エラーを無視して次へ進む
+		if (unauthedRoutes.includes(c.req.path)) {
+			await next();
+		} else {
+			// 認証が必要なルートではエラーを再スロー
+			throw e;
+		}
 	}
-	await verifyAuth()(c, next);
 });
 
+// 認証状態を見て振り分ける
 app.use("*", async (c, next) => {
-	if (c.req.path === "/") {
+	const p = c.req.path;
+
+	try {
+		const state = await AuthState(c);
+		console.log({ state, time: new Date().toISOString() });
+
+		if (state.state === "registering" && p !== "/signup") {
+			return c.redirect("/signup");
+		}
+
+		if (state.state === "unauthed") {
+			return c.redirect("/api/auth/signin");
+		}
+
+		return await next();
+	} catch (e) {
 		await next();
-		return;
 	}
-
-	const state = await AuthState(c);
-	console.log({ state });
-
-	// const authUser = c.get("authUser");
-	// console.log("authUser", authUser);
-
-	// const email = authUser.;
-
-	// // email が データベースにあるか確認する。
-	// // データベースになければ /signup にリダイレクトする。
-
-	// const db = drizzle(c.env.DB);
-	// const result = await db
-	// 	.select()
-	// 	.from(usersTable)
-	// 	.where(eq(usersTable.email, email));
-
-	// console.log("result", result);
-
-	// const result = await db
-	// 	.select()
-	// 	.from(usersTable)
-	// 	.where(sql`${usersTable.email} = ${email}`);
-
-	// if (result.length === 0) {
-	// 	return c.redirect("/signup");
-	// }
-
-	await next();
 });
 
 app.onError((err, c) => {
@@ -101,13 +99,6 @@ app.get("/api/get-auth", async (c) => {
 
 app.get("/api/test", async (c) => {
 	const db = drizzle(c.env.DB);
-	// const writeResult = await db.insert(usersTable).values({
-	// 	user_name: "John Doe",
-	// 	email: "john@example.com",
-	// 	user_id: crypto.randomUUID(),
-	// 	uuid: crypto.randomUUID(),
-	// });
-	// const result = await db.select().from(usersTable);
 
 	return c.json({
 		message: "Hello",

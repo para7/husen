@@ -1,22 +1,8 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import type { HonoContext } from "server";
 import { usersTable } from "server/db/schema";
-import {
-	email,
-	type InferInput,
-	literal,
-	object,
-	string,
-	union,
-} from "valibot";
-
-// export const AuthStateHono = (context: HonoContext) => {
-// 	const authUser = context.get("authUser");
-// 	if (!authUser) {
-// 		throw new Error("Auth user not found");
-// 	}
-// };
+import { type InferInput, literal, object, string, union } from "valibot";
 
 const UnAuthed = object({
 	state: literal("unauthed"),
@@ -44,12 +30,13 @@ const Authed = object({
 	}),
 });
 
-// 3つの状態のunionを定義
-export const AuthStateSchema = union([UnAuthed, Registering, Authed]);
+const AuthStateSchema = union([UnAuthed, Registering, Authed]);
 
-// 型の定義（TypeScriptの型システムで使用するため）
 export type AuthStateType = InferInput<typeof AuthStateSchema>;
 
+/**
+ * ユーザーの認証状態を判定する
+ */
 export const AuthState = async (
 	context: HonoContext,
 ): Promise<AuthStateType> => {
