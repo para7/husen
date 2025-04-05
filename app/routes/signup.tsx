@@ -1,4 +1,7 @@
+import { useForm } from "@conform-to/react";
+import { getFormProps, getInputProps } from "@conform-to/react";
 import {
+	Alert,
 	Button,
 	Container,
 	Paper,
@@ -6,9 +9,15 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { Form } from "react-router";
+import { parseWithValibot } from "conform-to-valibot";
+import { drizzle } from "drizzle-orm/d1";
+import { Form, redirect, useActionData } from "react-router";
+import { usersTable } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
+import type { Route } from "./+types/signup";
+import { eq } from "drizzle-orm";
+// import { IconAlertCircle } from "@tabler/icons-react";
 
 const schema = v.object({
 	userId: v.pipe(
@@ -23,14 +32,84 @@ const schema = v.object({
 	),
 });
 
-export const action = async ({ request }: { request: Request }) => {
-	const body = await request.formData();
-	// const name = body.get("visitorsName");
-	console.log(body);
-	return { message: "Hello, " };
+export const action = async ({ request, context }: Route.ActionArgs) => {
+	const formData = await request.formData();
+	const submission = await parseWithValibot(formData, {
+		schema,
+	});
+
+	// バリデーションエラーがある場合はクライアントに返す
+	if (submission.status !== "success") {
+		return submission.reply();
+	}
+
+	// バリデーション成功時の処理
+	const { userId, username } = submission.value;
+	console.log({ userId, username });
+
+	const authUser = context.hono.context.get("authUser");
+	const email = authUser.session.user?.email;
+
+	if (!email) {
+		return submission.reply({
+			formErrors: [
+				"内部エラー: Google 認証からメールアドレスが取得できませんでした",
+			],
+		});
+	}
+
+	// ここでユーザー登録処理を行う
+	const db = drizzle(context.cloudflare.env.DB);
+	const result = await db.insert(usersTable).values({
+		user_id: userId,
+		user_name: username,
+		email: email,
+	});
+
+	console.log({ result });
+
+	return submission.reply({});
+};
+
+export const loader = async ({ context }: Route.LoaderArgs) => {
+	const db = drizzle(context.cloudflare.env.DB);
+	const email = context.hono.context.get("authUser").session.user?.email;
+
+	if (!email) {
+		return {};
+	}
+
+	const result = await db
+		.select()
+		.from(usersTable)
+		.where(eq(usersTable.email, email));
+
+	// ユーザーデータがあったらホームにリダイレクト
+	if (result.length > 0) {
+		return redirect("/home");
+	}
+
+	return { result };
 };
 
 export default function SignUp() {
+	const lastResult = useActionData<typeof action>();
+	const [form, { userId, username }] = useForm({
+		// 前回のサブミット結果を同期
+		lastResult,
+
+		// クライアント側でもバリデーションロジックを再利用
+		onValidate({ formData }) {
+			return parseWithValibot(formData, { schema });
+		},
+
+		// フォームのバリデーションタイミングを設定
+		shouldValidate: "onBlur",
+		shouldRevalidate: "onInput",
+	});
+
+	console.log(form.errors);
+
 	return (
 		<>
 			<Container size={420} my={40}>
@@ -39,20 +118,35 @@ export default function SignUp() {
 				</Title>
 
 				<Paper withBorder shadow="md" p={30} mt={30} radius="md">
-					<Form method="post">
+					<Form method="post" {...getFormProps(form)}>
 						<Stack>
+							{form.errors && form.errors.length > 0 && (
+								<Alert
+									// icon={<IconAlertCircle size="1rem" />}
+									// title="エラー"
+									color="red"
+									variant="light"
+								>
+									{form.errors.map((error) => (
+										<div key={`form-error-${error}`}>{error}</div>
+									))}
+								</Alert>
+							)}
+
 							<TextInput
 								label="ユーザーID"
-								name="userId"
+								{...getInputProps(userId, { type: "text" })}
 								placeholder="your-user-id"
 								required
+								error={userId.errors}
 							/>
 
 							<TextInput
 								label="ユーザー名"
-								name="username"
+								{...getInputProps(username, { type: "text" })}
 								placeholder="Yamada Taro"
 								required
+								error={username.errors}
 							/>
 
 							<Button variant="gradient" type="submit" fullWidth mt="xl">

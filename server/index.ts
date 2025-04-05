@@ -3,7 +3,6 @@ import { authHandler, initAuthConfig, verifyAuth } from "@hono/auth-js";
 import { drizzle } from "drizzle-orm/d1";
 import { type Context, Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { url } from "valibot";
 import { AuthState } from "~/lib/domain/AuthState";
 
 type HonoContextVars = {
@@ -84,14 +83,14 @@ app.use("*", async (c, next) => {
 	}
 });
 
-// app.onError((err, c) => {
-// 	console.error("", err);
-// 	if (err instanceof HTTPException && err.status === 401) {
-// 		return c.redirect("/api/auth/signin");
-// 	}
+app.onError((err, c) => {
+	console.error("", err);
+	if (err instanceof HTTPException && err.status === 401) {
+		return c.redirect("/api/auth/signin");
+	}
 
-// 	return c.text("Other Error", 500);
-// });
+	return c.text("Other Error", 500);
+});
 
 app.get("/api/get-auth", async (c) => {
 	const auth = c.get("authUser");

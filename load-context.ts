@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { HonoContext } from "server";
 import type { PlatformProxy } from "wrangler";
 
 type Env = {
@@ -22,7 +23,7 @@ type GetLoadContextArgs = {
 			cf: Request["cf"];
 		};
 		hono: {
-			context: Context<Env>;
+			context: HonoContext;
 		};
 	};
 };
