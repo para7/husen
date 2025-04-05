@@ -29,6 +29,8 @@ app.use(
 	initAuthConfig((c) => ({
 		secret: c.env.AUTH_SECRET,
 		providers: [Google],
+		basePath: "/api/auth",
+		trustHost: true,
 		// callbacks: {
 		// 	// signIn: async () => {
 		// 	// 	console.log("signIn function called");
