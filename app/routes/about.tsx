@@ -1,11 +1,11 @@
 import {
-	Container,
-	Title,
-	Text,
-	List,
-	Stack,
 	Anchor,
 	Box,
+	Container,
+	List,
+	Stack,
+	Text,
+	Title,
 } from "@mantine/core";
 import { Link } from "react-router";
 

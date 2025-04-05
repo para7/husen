@@ -66,9 +66,11 @@ app.use("*", async (c, next) => {
 
 	try {
 		const state = await AuthState(c);
-		console.log({ state, time: new Date().toISOString() });
+		console.log({ state, time: new Date().toISOString(), p });
 
-		if (state.state === "registering" && p !== "/signup") {
+		// formのsubmit の場合 .data に飛んでいくため.
+		if (state.state === "registering" && !p.startsWith("/signup")) {
+			console.log("redirect to /signup");
 			return c.redirect("/signup");
 		}
 
@@ -82,14 +84,14 @@ app.use("*", async (c, next) => {
 	}
 });
 
-app.onError((err, c) => {
-	console.error("", err);
-	if (err instanceof HTTPException && err.status === 401) {
-		return c.redirect("/api/auth/signin");
-	}
+// app.onError((err, c) => {
+// 	console.error("", err);
+// 	if (err instanceof HTTPException && err.status === 401) {
+// 		return c.redirect("/api/auth/signin");
+// 	}
 
-	return c.text("Other Error", 500);
-});
+// 	return c.text("Other Error", 500);
+// });
 
 app.get("/api/get-auth", async (c) => {
 	const auth = c.get("authUser");
