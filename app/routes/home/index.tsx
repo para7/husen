@@ -3,8 +3,10 @@ import { getFormProps, getInputProps } from "@conform-to/react";
 import {
 	Alert,
 	Avatar,
+	Badge,
 	Button,
 	Container,
+	DefaultMantineColor,
 	Divider,
 	Group,
 	Paper,
@@ -19,7 +21,7 @@ import { parseWithValibot } from "conform-to-valibot";
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Form, useActionData } from "react-router";
-import { TablePosts, TableUsers } from "server/db/schema";
+import { TablePosts, TableUsers, TableTags } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
@@ -29,6 +31,7 @@ const maxLength = 5;
 
 const schema = v.object({
 	content: v.pipe(v.string(), v.maxLength(maxLength)),
+	tags: v.optional(v.string()),
 });
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
@@ -43,18 +46,44 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 	}
 
 	// バリデーション成功時の処理
-	const { content } = submission.value;
+	const { content, tags } = submission.value;
 	const state = await GetAuthRemix(context.hono.context);
-	state;
-
 	const db = drizzle(context.cloudflare.env.DB);
+	const currentDate = new Date().toISOString();
 
 	// 投稿を作成
-	await db.insert(TablePosts).values({
-		user_id: state.user.uuid,
-		content: content,
-		order_date: new Date().toISOString(),
-	});
+	const result = await db
+		.insert(TablePosts)
+		.values({
+			user_id: state.user.uuid,
+			content: content,
+			order_date: currentDate,
+		})
+		.returning();
+
+	const newPost = result[0];
+
+	// タグが入力されている場合は保存
+	if (newPost && tags && tags.trim().length > 0) {
+		// スペースで区切ってタグを配列に変換（空白や重複を除去）
+		const tagArray = [
+			...new Set(tags.split(/\s+/).filter((tag) => tag.trim().length > 0)),
+		];
+
+		// 各タグをデータベースに保存
+		if (tagArray.length > 0) {
+			await Promise.all(
+				tagArray.map((tagText) =>
+					db.insert(TableTags).values({
+						post_id: newPost.uuid,
+						user_id: state.user.uuid,
+						tag_text: tagText,
+						order_date: currentDate,
+					}),
+				),
+			);
+		}
+	}
 
 	return submission.reply({
 		resetForm: true,
@@ -76,12 +105,28 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		.where(eq(TablePosts.user_id, state.user.uuid))
 		.orderBy(desc(TablePosts.order_date));
 
-	return { posts, user: state.user };
+	// 各投稿のタグを取得
+	const postsWithTags = await Promise.all(
+		posts.map(async (post) => {
+			const tags = await db
+				.select({ tag_text: TableTags.tag_text })
+				.from(TableTags)
+				.where(eq(TableTags.post_id, post.uuid))
+				.orderBy(TableTags.order_date);
+
+			return {
+				...post,
+				tags: tags.map((t) => t.tag_text),
+			};
+		}),
+	);
+
+	return { posts: postsWithTags, user: state.user };
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
 	const lastResult = useActionData<typeof action>();
-	const [form, { content }] = useForm({
+	const [form, { content, tags }] = useForm({
 		lastResult,
 		onValidate({ formData }) {
 			return parseWithValibot(formData, { schema });
@@ -91,6 +136,34 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 	});
 
 	const { posts, user } = loaderData;
+
+	// タグの色を決定する関数
+	const getTagColor = (tag: string) => {
+		// タグごとに固定の色を割り当てる
+		const tagColors: Record<string, string> = {
+			日常: "blue",
+			プログラミング: "green",
+			趣味: "violet",
+			旅行: "orange",
+			仕事: "teal",
+			学習: "red",
+			技術: "indigo",
+			音楽: "cyan",
+			アート: "grape",
+		};
+
+		// 設定されたタグは固定色、それ以外はランダム
+		if (tag in tagColors) {
+			return tagColors[tag];
+		}
+
+		// ランダムな色（文字列をハッシュ化して固定の色にする）
+		const hash = tag
+			.split("")
+			.reduce((acc, char) => acc + char.charCodeAt(0), 0);
+		const defaultColors = ["blue", "green", "violet", "orange", "teal"];
+		return defaultColors[Math.abs(hash) % defaultColors.length];
+	};
 
 	if (!user) {
 		return null;
@@ -191,6 +264,13 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 								</Text>
 							</div>
 
+							<TextInput
+								placeholder="タグをスペースで区切って入力（例: 日常 プログラミング 趣味）"
+								{...getInputProps(tags, { type: "text" })}
+								leftSection={<Text size="sm">#</Text>}
+								description="スペースで区切って複数のタグを入力できます"
+							/>
+
 							<Group justify="flex-end">
 								<Button
 									type="submit"
@@ -248,6 +328,22 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 									<Text size="sm" mb="xs">
 										{post.content}
 									</Text>
+									{/* タグ表示エリア */}
+									<Group gap={8} mb={8}>
+										{post.tags && post.tags.length > 0
+											? post.tags.map((tag, idx) => (
+													<Badge
+														key={tag}
+														variant="light"
+														color="blue"
+														size="sm"
+														radius="sm"
+													>
+														#{tag}
+													</Badge>
+												))
+											: null}
+									</Group>
 								</div>
 							</Group>
 						</Paper>
