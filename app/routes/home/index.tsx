@@ -22,19 +22,26 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { parseWithValibot } from "conform-to-valibot";
-import { desc, eq, and } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { useEffect, useRef, useState } from "react";
-import { Form, useActionData } from "react-router";
 import { TablePosts, TableTags, TableUsers } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import type { Route } from "./+types/index";
+import {
+	useActionData,
+	Form,
+	Link,
+	useParams,
+	useNavigate,
+	Outlet,
+} from "react-router";
 
 const maxLength = 500;
 
-// 投稿用と削除用のスキーマを定義
+// 投稿用のスキーマを定義
 const postSchema = v.object({
 	content: v.pipe(v.string(), v.maxLength(maxLength)),
 	tags: v.optional(v.string()),
@@ -42,49 +49,8 @@ const postSchema = v.object({
 	_action: v.literal("post"),
 });
 
-const deleteSchema = v.object({
-	post_id: v.string(),
-	_action: v.literal("delete"),
-});
-
-// 両方のスキーマを受け付けるための統合スキーマ
-const schema = v.union([postSchema, deleteSchema]);
-
 export const action = async ({ request, context }: Route.ActionArgs) => {
 	const formData = await request.formData();
-	const action = formData.get("_action");
-
-	if (action === "delete") {
-		// 削除アクションの場合
-		const submission = await parseWithValibot(formData, {
-			schema: deleteSchema,
-		});
-
-		if (submission.status !== "success") {
-			return submission.reply();
-		}
-
-		const { post_id } = submission.value;
-		const state = await GetAuthRemix(context.hono.context);
-		const db = drizzle(context.cloudflare.env.DB);
-
-		// 関連するタグを先に削除（外部キー制約のため）
-		await db.delete(TableTags).where(eq(TableTags.post_id, post_id));
-
-		// 投稿を削除（自分の投稿のみ削除可能）
-		await db
-			.delete(TablePosts)
-			.where(
-				and(
-					eq(TablePosts.uuid, post_id),
-					eq(TablePosts.user_id, state.user.uuid),
-				),
-			);
-
-		return submission.reply();
-	}
-
-	// 投稿アクションの場合
 	const submission = await parseWithValibot(formData, {
 		schema: postSchema,
 	});
@@ -174,20 +140,19 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
+	const { postId } = useParams();
+	const navigate = useNavigate();
 	const lastResult = useActionData<typeof action>();
 	// タグと保持設定を管理するためのステート
 	const [savedTags, setSavedTags] = useState<string>("");
 	const [keepTagsState, setKeepTagsState] = useState<boolean>(false);
 	// 投稿が成功したかどうかを追跡するためのref
 	const isSubmittedRef = useRef(false);
-	// 削除確認モーダルの状態管理
-	const [opened, { open, close }] = useDisclosure(false);
-	const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
 	const [form, { content, tags, keepTags }] = useForm({
 		lastResult,
 		onValidate({ formData }) {
-			return parseWithValibot(formData, { schema });
+			return parseWithValibot(formData, { schema: postSchema });
 		},
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
@@ -223,10 +188,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 		isSubmittedRef.current = true;
 	};
 
-	// 削除確認モーダルを開く
+	// 削除ボタンクリック時に対応する削除ページへ遷移
 	const handleDeleteClick = (postId: string) => {
-		setPostToDelete(postId);
-		open();
+		navigate(`/home/${postId}/delete`);
 	};
 
 	const { posts, user } = loaderData;
@@ -259,24 +223,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				</Group>
 			</Paper>
 
-			{/* 削除確認モーダル */}
-			<Modal opened={opened} onClose={close} title="投稿を削除" centered>
-				<Text mb="md">
-					この投稿を削除してもよろしいですか？この操作は取り消せません。
-				</Text>
-				<Group justify="space-between">
-					<Button variant="outline" onClick={close}>
-						キャンセル
-					</Button>
-					<Form method="post">
-						<input type="hidden" name="post_id" value={postToDelete || ""} />
-						<input type="hidden" name="_action" value="delete" />
-						<Button type="submit" color="red" onClick={close}>
-							削除する
-						</Button>
-					</Form>
-				</Group>
-			</Modal>
+			{/* Outletを追加してネストされたルートをレンダリング */}
+			<Outlet />
 
 			{/* メインコンテンツ */}
 			<div>
@@ -334,18 +282,18 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 									minRows={3}
 									maxRows={8}
 									{...getInputProps(content, { type: "text" })}
-									error={content.value && content.value.length > maxLength}
+									error={content?.value && content.value.length > maxLength}
 								/>
 								<Text
 									size="sm"
 									c={
-										content.value && content.value.length > maxLength
+										content?.value && content.value.length > maxLength
 											? "red"
 											: "dimmed"
 									}
 									style={{ position: "absolute", bottom: 8, right: 8 }}
 								>
-									{content.value?.length || 0}/{maxLength}
+									{content?.value?.length || 0}/{maxLength}
 								</Text>
 							</div>
 
@@ -370,7 +318,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 								<Button
 									type="submit"
 									disabled={
-										!content.value ||
+										!content?.value ||
 										content.value.length === 0 ||
 										content.value.length > maxLength
 									}
@@ -425,15 +373,27 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 												</Text>
 											</Group>
 										</div>
-										<ActionIcon
-											color="red"
-											variant="subtle"
-											size="sm"
-											onClick={() => handleDeleteClick(post.uuid)}
-											aria-label="削除"
-										>
-											✕
-										</ActionIcon>
+										<Group gap={8}>
+											<Link to={`/home/${post.uuid}/edit`}>
+												<ActionIcon
+													color="blue"
+													variant="subtle"
+													size="sm"
+													aria-label="編集"
+												>
+													✎
+												</ActionIcon>
+											</Link>
+											<ActionIcon
+												color="red"
+												variant="subtle"
+												size="sm"
+												onClick={() => handleDeleteClick(post.uuid)}
+												aria-label="削除"
+											>
+												✕
+											</ActionIcon>
+										</Group>
 									</Group>
 									<Text size="sm" mb="xs">
 										{post.content}
