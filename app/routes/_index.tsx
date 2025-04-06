@@ -1,10 +1,10 @@
 import { Button, Container, Stack, Title } from "@mantine/core";
 import { Text } from "@mantine/core";
-import type { Route } from "./+types/_index";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { redirect } from "react-router";
-import { usersTable } from "server/db/schema";
-import { eq } from "drizzle-orm";
+import { TableUsers } from "server/db/schema";
+import type { Route } from "./+types/_index";
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
 	const db = drizzle(context.cloudflare.env.DB);
@@ -16,8 +16,8 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
 	const result = await db
 		.select()
-		.from(usersTable)
-		.where(eq(usersTable.email, email));
+		.from(TableUsers)
+		.where(eq(TableUsers.email, email));
 
 	// ユーザーデータがあったらホームにリダイレクト
 	if (result.length > 0) {

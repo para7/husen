@@ -10,13 +10,13 @@ import {
 	Title,
 } from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Form, redirect, useActionData } from "react-router";
-import { usersTable } from "server/db/schema";
+import { TableUsers } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import type { Route } from "./+types/signup";
-import { eq } from "drizzle-orm";
 // import { IconAlertCircle } from "@tabler/icons-react";
 
 const schema = v.object({
@@ -60,7 +60,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
 	// ここでユーザー登録処理を行う
 	const db = drizzle(context.cloudflare.env.DB);
-	const result = await db.insert(usersTable).values({
+	const result = await db.insert(TableUsers).values({
 		user_id: userId,
 		user_name: username,
 		email: email,
@@ -81,8 +81,8 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
 	const result = await db
 		.select()
-		.from(usersTable)
-		.where(eq(usersTable.email, email));
+		.from(TableUsers)
+		.where(eq(TableUsers.email, email));
 
 	// ユーザーデータがあったらホームにリダイレクト
 	if (result.length > 0) {
