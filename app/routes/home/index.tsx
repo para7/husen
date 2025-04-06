@@ -5,6 +5,7 @@ import {
 	Avatar,
 	Badge,
 	Button,
+	Checkbox,
 	Container,
 	DefaultMantineColor,
 	Divider,
@@ -26,12 +27,14 @@ import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import type { Route } from "./+types/index";
+import { useState, useEffect, useRef } from "react";
 
-const maxLength = 5;
+const maxLength = 500;
 
 const schema = v.object({
 	content: v.pipe(v.string(), v.maxLength(maxLength)),
 	tags: v.optional(v.string()),
+	keepTags: v.optional(v.boolean()),
 });
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
@@ -46,7 +49,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 	}
 
 	// バリデーション成功時の処理
-	const { content, tags } = submission.value;
+	const { content, tags, keepTags } = submission.value;
 	const state = await GetAuthRemix(context.hono.context);
 	const db = drizzle(context.cloudflare.env.DB);
 	const currentDate = new Date().toISOString();
@@ -126,7 +129,13 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
 	const lastResult = useActionData<typeof action>();
-	const [form, { content, tags }] = useForm({
+	// タグと保持設定を管理するためのステート
+	const [savedTags, setSavedTags] = useState<string>("");
+	const [keepTagsState, setKeepTagsState] = useState<boolean>(false);
+	// 投稿が成功したかどうかを追跡するためのref
+	const isSubmittedRef = useRef(false);
+
+	const [form, { content, tags, keepTags }] = useForm({
 		lastResult,
 		onValidate({ formData }) {
 			return parseWithValibot(formData, { schema });
@@ -134,6 +143,36 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
 	});
+
+	// タグの値を保存
+	const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (keepTagsState) {
+			setSavedTags(e.target.value);
+		}
+	};
+
+	// チェックボックスの状態を保存
+	const handleKeepTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setKeepTagsState(e.target.checked);
+	};
+
+	// フォーム送信前にタグとチェックボックスの値を保存
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+		const formData = new FormData(e.currentTarget);
+		const currentTags = (formData.get("tags") as string) || "";
+		const isKeepTags =
+			formData.get("keepTags") === "on" || formData.get("keepTags") === "true";
+
+		if (isKeepTags) {
+			setSavedTags(currentTags);
+			setKeepTagsState(true);
+		} else {
+			setSavedTags("");
+			setKeepTagsState(false);
+		}
+
+		isSubmittedRef.current = true;
+	};
 
 	const { posts, user } = loaderData;
 
@@ -233,7 +272,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
 				{/* 投稿フォーム */}
 				<Paper withBorder p="md" mb="md">
-					<Form method="post" {...getFormProps(form)}>
+					<Form method="post" {...getFormProps(form)} onSubmit={handleSubmit}>
 						<Stack>
 							{form.errors && form.errors.length > 0 && (
 								<Alert color="red" variant="light">
@@ -269,6 +308,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 								{...getInputProps(tags, { type: "text" })}
 								leftSection={<Text size="sm">#</Text>}
 								description="スペースで区切って複数のタグを入力できます"
+								defaultValue={keepTagsState ? savedTags : ""}
+								onChange={handleTagsChange}
+							/>
+
+							<Checkbox
+								{...getInputProps(keepTags, { type: "checkbox" })}
+								label="タグを保持する"
+								defaultChecked={keepTagsState}
+								onChange={handleKeepTagsChange}
 							/>
 
 							<Group justify="flex-end">
