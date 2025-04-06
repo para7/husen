@@ -1,6 +1,7 @@
 import { useForm } from "@conform-to/react";
 import { getFormProps, getInputProps } from "@conform-to/react";
 import {
+	ActionIcon,
 	Alert,
 	Avatar,
 	Badge,
@@ -10,6 +11,7 @@ import {
 	DefaultMantineColor,
 	Divider,
 	Group,
+	Modal,
 	Paper,
 	Stack,
 	Tabs,
@@ -18,29 +20,73 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { parseWithValibot } from "conform-to-valibot";
-import { eq, desc } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { useEffect, useRef, useState } from "react";
 import { Form, useActionData } from "react-router";
-import { TablePosts, TableUsers, TableTags } from "server/db/schema";
+import { TablePosts, TableTags, TableUsers } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import type { Route } from "./+types/index";
-import { useState, useEffect, useRef } from "react";
 
 const maxLength = 500;
 
-const schema = v.object({
+// 投稿用と削除用のスキーマを定義
+const postSchema = v.object({
 	content: v.pipe(v.string(), v.maxLength(maxLength)),
 	tags: v.optional(v.string()),
 	keepTags: v.optional(v.boolean()),
+	_action: v.literal("post"),
 });
+
+const deleteSchema = v.object({
+	post_id: v.string(),
+	_action: v.literal("delete"),
+});
+
+// 両方のスキーマを受け付けるための統合スキーマ
+const schema = v.union([postSchema, deleteSchema]);
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
 	const formData = await request.formData();
+	const action = formData.get("_action");
+
+	if (action === "delete") {
+		// 削除アクションの場合
+		const submission = await parseWithValibot(formData, {
+			schema: deleteSchema,
+		});
+
+		if (submission.status !== "success") {
+			return submission.reply();
+		}
+
+		const { post_id } = submission.value;
+		const state = await GetAuthRemix(context.hono.context);
+		const db = drizzle(context.cloudflare.env.DB);
+
+		// 関連するタグを先に削除（外部キー制約のため）
+		await db.delete(TableTags).where(eq(TableTags.post_id, post_id));
+
+		// 投稿を削除（自分の投稿のみ削除可能）
+		await db
+			.delete(TablePosts)
+			.where(
+				and(
+					eq(TablePosts.uuid, post_id),
+					eq(TablePosts.user_id, state.user.uuid),
+				),
+			);
+
+		return submission.reply();
+	}
+
+	// 投稿アクションの場合
 	const submission = await parseWithValibot(formData, {
-		schema,
+		schema: postSchema,
 	});
 
 	// バリデーションエラーがある場合はクライアントに返す
@@ -134,6 +180,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 	const [keepTagsState, setKeepTagsState] = useState<boolean>(false);
 	// 投稿が成功したかどうかを追跡するためのref
 	const isSubmittedRef = useRef(false);
+	// 削除確認モーダルの状態管理
+	const [opened, { open, close }] = useDisclosure(false);
+	const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
 	const [form, { content, tags, keepTags }] = useForm({
 		lastResult,
@@ -174,35 +223,13 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 		isSubmittedRef.current = true;
 	};
 
-	const { posts, user } = loaderData;
-
-	// タグの色を決定する関数
-	const getTagColor = (tag: string) => {
-		// タグごとに固定の色を割り当てる
-		const tagColors: Record<string, string> = {
-			日常: "blue",
-			プログラミング: "green",
-			趣味: "violet",
-			旅行: "orange",
-			仕事: "teal",
-			学習: "red",
-			技術: "indigo",
-			音楽: "cyan",
-			アート: "grape",
-		};
-
-		// 設定されたタグは固定色、それ以外はランダム
-		if (tag in tagColors) {
-			return tagColors[tag];
-		}
-
-		// ランダムな色（文字列をハッシュ化して固定の色にする）
-		const hash = tag
-			.split("")
-			.reduce((acc, char) => acc + char.charCodeAt(0), 0);
-		const defaultColors = ["blue", "green", "violet", "orange", "teal"];
-		return defaultColors[Math.abs(hash) % defaultColors.length];
+	// 削除確認モーダルを開く
+	const handleDeleteClick = (postId: string) => {
+		setPostToDelete(postId);
+		open();
 	};
+
+	const { posts, user } = loaderData;
 
 	if (!user) {
 		return null;
@@ -231,6 +258,25 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 					<SignOutButton />
 				</Group>
 			</Paper>
+
+			{/* 削除確認モーダル */}
+			<Modal opened={opened} onClose={close} title="投稿を削除" centered>
+				<Text mb="md">
+					この投稿を削除してもよろしいですか？この操作は取り消せません。
+				</Text>
+				<Group justify="space-between">
+					<Button variant="outline" onClick={close}>
+						キャンセル
+					</Button>
+					<Form method="post">
+						<input type="hidden" name="post_id" value={postToDelete || ""} />
+						<input type="hidden" name="_action" value="delete" />
+						<Button type="submit" color="red" onClick={close}>
+							削除する
+						</Button>
+					</Form>
+				</Group>
+			</Modal>
 
 			{/* メインコンテンツ */}
 			<div>
@@ -304,7 +350,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 							</div>
 
 							<TextInput
-								placeholder="タグをスペースで区切って入力（例: 日常 プログラミング 趣味）"
+								placeholder="タグをスペースで区切って入力"
 								{...getInputProps(tags, { type: "text" })}
 								leftSection={<Text size="sm">#</Text>}
 								description="スペースで区切って複数のタグを入力できます"
@@ -320,9 +366,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 							/>
 
 							<Group justify="flex-end">
+								<input type="hidden" name="_action" value="post" />
 								<Button
 									type="submit"
-									variant="gradient"
 									disabled={
 										!content.value ||
 										content.value.length === 0 ||
@@ -352,26 +398,42 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 									{user.user_name[0]}
 								</Avatar>
 								<div style={{ flex: 1 }}>
-									<Group gap={8} mb={4}>
-										<Text fw={500} size="sm">
-											{user.user_name}
-										</Text>
-										<Text c="dimmed" size="sm">
-											@{user.user_id}
-										</Text>
-										<Text c="dimmed" size="sm">
-											・
-										</Text>
-										<Text c="dimmed" size="sm">
-											{new Date(`${post.created_at}`).toLocaleString("sv-SE", {
-												year: "numeric",
-												month: "2-digit",
-												day: "2-digit",
-												hour: "2-digit",
-												minute: "2-digit",
-												hour12: false,
-											})}
-										</Text>
+									<Group gap={8} mb={4} align="center" wrap="nowrap">
+										<div style={{ flex: 1 }}>
+											<Group gap={8} wrap="nowrap">
+												<Text fw={500} size="sm">
+													{user.user_name}
+												</Text>
+												<Text c="dimmed" size="sm">
+													@{user.user_id}
+												</Text>
+												<Text c="dimmed" size="sm">
+													・
+												</Text>
+												<Text c="dimmed" size="sm">
+													{new Date(`${post.created_at}`).toLocaleString(
+														"sv-SE",
+														{
+															year: "numeric",
+															month: "2-digit",
+															day: "2-digit",
+															hour: "2-digit",
+															minute: "2-digit",
+															hour12: false,
+														},
+													)}
+												</Text>
+											</Group>
+										</div>
+										<ActionIcon
+											color="red"
+											variant="subtle"
+											size="sm"
+											onClick={() => handleDeleteClick(post.uuid)}
+											aria-label="削除"
+										>
+											✕
+										</ActionIcon>
 									</Group>
 									<Text size="sm" mb="xs">
 										{post.content}
