@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import type { HonoContext } from "server";
-import { usersTable } from "server/db/schema";
+import { TableUsers } from "server/db/schema";
 import { type InferInput, literal, object, string, union } from "valibot";
 
 const UnAuthed = object({
@@ -52,8 +52,8 @@ export const AuthState = async (
 	// 登録されたメールアドレスがあるか確認する
 	const result = await db
 		.select()
-		.from(usersTable)
-		.where(eq(usersTable.email, email));
+		.from(TableUsers)
+		.where(eq(TableUsers.email, email));
 
 	const user = result[0];
 
