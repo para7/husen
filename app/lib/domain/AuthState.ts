@@ -1,8 +1,16 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { redirect } from "react-router";
 import type { HonoContext } from "server";
 import { TableUsers } from "server/db/schema";
-import { type InferInput, literal, object, string, union } from "valibot";
+import {
+	type InferInput,
+	type InferOutput,
+	literal,
+	object,
+	string,
+	union,
+} from "valibot";
 
 const UnAuthed = object({
 	state: literal("unauthed"),
@@ -74,4 +82,22 @@ export const AuthState = async (
 			user_id: user.user_id,
 		},
 	};
+};
+
+/**
+ * ユーザーの認証状態を取得する
+ *
+ * 未認証だった場合はルートにリダイレクトする(が、hono側が先に判定されるのでありえない)
+ */
+export const GetAuthRemix = async (
+	context: HonoContext,
+): Promise<InferOutput<typeof Authed>> => {
+	const state = await AuthState(context);
+
+	if (state.state !== "authed") {
+		// @ts-expect-error
+		return redirect("/");
+	}
+
+	return state;
 };

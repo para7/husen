@@ -18,12 +18,16 @@ export const TableUsers = sqliteTable("users", {
 
 	user_id: text("user_id").notNull(),
 
-	created_at: text("created_at").notNull().default(sql`(current_timestamp)`),
+	profile: text("profile").notNull().default(""),
+
+	created_at: text("created_at")
+		.notNull()
+		.$defaultFn(() => new Date().toISOString()),
 
 	updated_at: text("updated_at")
 		.notNull()
-		.default(sql`(current_timestamp)`)
-		.$onUpdate(() => sql`(CURRENT_TIMESTAMP)`),
+		.$defaultFn(() => new Date().toISOString())
+		.$onUpdate(() => new Date().toISOString()),
 });
 
 export const TablePosts = sqliteTable(
@@ -39,9 +43,14 @@ export const TablePosts = sqliteTable(
 
 		content: text("content").notNull(),
 
-		created_at: text("created_at").notNull().default(sql`(current_timestamp)`),
+		created_at: text("created_at")
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
 
-		updated_at: text("updated_at").notNull().default(sql`(current_timestamp)`),
+		updated_at: text("updated_at")
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdate(() => new Date().toISOString()),
 
 		/**
 		 * 表示順制御用
@@ -64,12 +73,20 @@ export const TableTags = sqliteTable(
 		/**
 		 * 絞り込みのため、postと同じユーザーIDを格納しておく
 		 */
-		user_id: text("user_id").notNull(),
+		user_id: text("user_id")
+			.notNull()
+			.references(() => TableUsers.uuid),
 
 		tag_text: text("tag_text").notNull(),
 
-		created_at: text("created_at").notNull().default(sql`(current_timestamp)`),
-		updated_at: text("updated_at").notNull().default(sql`(current_timestamp)`),
+		created_at: text("created_at")
+			.notNull()
+			.$defaultFn(() => new Date().toISOString()),
+
+		updated_at: text("updated_at")
+			.notNull()
+			.$defaultFn(() => new Date().toISOString())
+			.$onUpdate(() => new Date().toISOString()),
 
 		/**
 		 * 表示順制御用

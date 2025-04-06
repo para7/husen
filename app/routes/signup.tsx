@@ -10,13 +10,13 @@ import {
 	Title,
 } from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Form, redirect, useActionData } from "react-router";
 import { TableUsers } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import type { Route } from "./+types/signup";
-import { eq } from "drizzle-orm";
 // import { IconAlertCircle } from "@tabler/icons-react";
 
 const schema = v.object({
