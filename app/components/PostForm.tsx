@@ -1,8 +1,8 @@
 import {
+	type SubmissionResult,
 	getFormProps,
 	getInputProps,
 	useForm,
-	type SubmissionResult,
 } from "@conform-to/react";
 import {
 	Alert,

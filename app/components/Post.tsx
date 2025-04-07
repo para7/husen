@@ -1,6 +1,6 @@
 import { ActionIcon, Avatar, Badge, Group, Paper, Text } from "@mantine/core";
-import { Link } from "react-router";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { Link } from "react-router";
 
 type PostProps = {
 	post: {

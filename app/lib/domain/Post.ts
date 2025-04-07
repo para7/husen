@@ -7,8 +7,8 @@ type Post = {
 	tags: string[];
 };
 
-export const CreatePost = async (d1: D1Database, post: Post) => {
-	const db = drizzle(d1);
+// export const CreatePost = async (d1: D1Database, post: Post) => {
+// 	const db = drizzle(d1);
 
-	await db.insert(TablePosts).values(post);
-};
+// 	await db.insert(TablePosts).values(post);
+// };
