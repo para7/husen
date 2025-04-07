@@ -1,5 +1,6 @@
 import { ActionIcon, Avatar, Badge, Group, Paper, Text } from "@mantine/core";
 import { Link } from "react-router";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 
 type PostProps = {
 	post: {
@@ -72,7 +73,7 @@ export default function Post({
 									size="sm"
 									aria-label="編集"
 								>
-									✎
+									<IconEdit size={16} stroke={1.5} />
 								</ActionIcon>
 							</Link>
 							<ActionIcon
@@ -82,7 +83,7 @@ export default function Post({
 								onClick={() => onDeleteClick(post.uuid)}
 								aria-label="削除"
 							>
-								✕
+								<IconTrash size={16} stroke={1.5} />
 							</ActionIcon>
 						</Group>
 					</Group>
