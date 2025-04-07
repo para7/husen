@@ -15,7 +15,7 @@ import {
 import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
 import { AuthState } from "~/lib/domain/AuthState";
-import type { Route } from "./+types/index";
+import type { Route } from "./+types/route";
 
 // 削除用のスキーマを定義
 const deleteSchema = v.object({
