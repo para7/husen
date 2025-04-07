@@ -16,8 +16,7 @@
 		"format": "biome check --write",
 		"preview": "pnpm run build && wrangler dev",
 		"start": "wrangler dev --port 3000 --ip '0.0.0.0'",
-		"test:e2e:vite": "playwright test -c playwright-vite.config.ts e2e.test.ts",
-		"test:e2e:workers": "pnpm run build && playwright test -c playwright-workers.config.ts e2e.test.ts",
+		"test": "vitest",
 		"typecheck": "react-router typegen && tsc",
 		"typegen": "react-router typegen"
 	},
@@ -46,7 +45,6 @@
 		"@cloudflare/workers-types": "^4.20250403.0",
 		"@hono/vite-dev-server": "^0.19.0",
 		"@libsql/client": "^0.15.2",
-		"@playwright/test": "^1.48.2",
 		"@react-router/dev": "^7.4.1",
 		"@types/node": "^22.14.0",
 		"@types/react": "^18.2.20",
@@ -54,13 +52,13 @@
 		"dotenv": "^16.4.7",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "^0.30.6",
-		"playwright": "^1.47.0",
 		"postcss": "^8.5.3",
 		"postcss-preset-mantine": "^1.17.0",
 		"postcss-simple-vars": "^7.0.1",
 		"typescript": "^5.1.6",
 		"vite": "^6.2.1",
 		"vite-tsconfig-paths": "^5.1.4",
+		"vitest": "^3.1.1",
 		"wrangler": "^4.7.0"
 	},
 	"engines": {

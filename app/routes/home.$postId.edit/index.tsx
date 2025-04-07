@@ -16,14 +16,15 @@ import { drizzle } from "drizzle-orm/d1";
 import { useEffect, useState } from "react";
 import {
 	Form,
+	redirect,
 	useActionData,
 	useLoaderData,
 	useNavigate,
-	redirect,
 } from "react-router";
 import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
 import { AuthState } from "~/lib/domain/AuthState";
+import { SplitTags } from "~/lib/validate/SplitTags";
 import type { Route } from "./+types/index";
 
 const maxLength = 500;
@@ -78,10 +79,8 @@ export const action = async ({
 
 	// 新しいタグを保存
 	if (tags && tags.trim().length > 0) {
-		// スペースで区切ってタグを配列に変換（空白や重複を除去）
-		const tagArray = [
-			...new Set(tags.split(/\s+/).filter((tag) => tag.trim().length > 0)),
-		];
+		// SplitTags関数を使用してタグ配列を取得
+		const tagArray = SplitTags(tags);
 
 		// 各タグをデータベースに保存
 		if (tagArray.length > 0) {

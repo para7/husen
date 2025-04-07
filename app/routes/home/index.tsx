@@ -8,36 +8,32 @@ import {
 	Button,
 	Checkbox,
 	Container,
-	DefaultMantineColor,
-	Divider,
 	Group,
-	Modal,
 	Paper,
 	Stack,
-	Tabs,
 	Text,
 	TextInput,
 	Textarea,
 	Title,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { parseWithValibot } from "conform-to-valibot";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { useEffect, useRef, useState } from "react";
-import { TablePosts, TableTags, TableUsers } from "server/db/schema";
+import { useRef, useState } from "react";
+import {
+	Form,
+	Link,
+	Outlet,
+	useActionData,
+	useNavigate,
+	useParams,
+} from "react-router";
+import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
+import { SplitTags } from "~/lib/validate/SplitTags";
 import type { Route } from "./+types/index";
-import {
-	useActionData,
-	Form,
-	Link,
-	useParams,
-	useNavigate,
-	Outlet,
-} from "react-router";
 
 const maxLength = 500;
 
@@ -80,10 +76,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
 	// タグが入力されている場合は保存
 	if (newPost && tags && tags.trim().length > 0) {
-		// スペースで区切ってタグを配列に変換（空白や重複を除去）
-		const tagArray = [
-			...new Set(tags.split(/\s+/).filter((tag) => tag.trim().length > 0)),
-		];
+		// SplitTags関数を使用してタグ配列を取得
+		const tagArray = SplitTags(tags);
 
 		// 各タグをデータベースに保存
 		if (tagArray.length > 0) {
