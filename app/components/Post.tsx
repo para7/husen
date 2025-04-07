@@ -87,13 +87,13 @@ export default function Post({
 							</ActionIcon>
 						</Group>
 					</Group>
-					<Text size="sm" mb="xs">
+					<Text size="sm" mb="xs" style={{ whiteSpace: "pre-wrap" }}>
 						{post.content}
 					</Text>
 					{/* タグ表示エリア */}
 					<Group gap={8} mb={8}>
 						{tags && tags.length > 0
-							? tags.map((tag) => (
+							? tags.sort().map((tag) => (
 									<Badge
 										key={tag}
 										variant="light"
