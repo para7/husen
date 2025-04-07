@@ -1,0 +1,16 @@
+---
+description: 
+globs: server/*
+---
+## backend
+
+- cloudflare d1
+- drizzle orm
+- hono
+
+データベーススキーマは drizzle-kit で管理しており、server/db/schema.ts に定義があります。
+
+
+
+
+

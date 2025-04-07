@@ -30,6 +30,7 @@ import {
 } from "react-router";
 import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
+import Post from "~/components/Post";
 import SignOutButton from "~/lib/SignOutButton";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import { SplitTags } from "~/lib/validate/SplitTags";
@@ -327,90 +328,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				{/* 投稿一覧 */}
 				<Stack gap={0}>
 					{posts.map((post, index) => (
-						<Paper
+						<Post
 							key={post.uuid}
-							withBorder
-							p="md"
-							style={{
-								borderBottom: index === posts.length - 1 ? undefined : "none",
-							}}
-						>
-							<Group align="flex-start" wrap="nowrap">
-								<Avatar radius="xl" size="md">
-									{user.user_name[0]}
-								</Avatar>
-								<div style={{ flex: 1 }}>
-									<Group gap={8} mb={4} align="center" wrap="nowrap">
-										<div style={{ flex: 1 }}>
-											<Group gap={8} wrap="nowrap">
-												<Text fw={500} size="sm">
-													{user.user_name}
-												</Text>
-												<Text c="dimmed" size="sm">
-													@{user.user_id}
-												</Text>
-												<Text c="dimmed" size="sm">
-													・
-												</Text>
-												<Text c="dimmed" size="sm">
-													{new Date(`${post.created_at}`).toLocaleString(
-														"sv-SE",
-														{
-															year: "numeric",
-															month: "2-digit",
-															day: "2-digit",
-															hour: "2-digit",
-															minute: "2-digit",
-															hour12: false,
-														},
-													)}
-												</Text>
-											</Group>
-										</div>
-										<Group gap={8}>
-											<Link to={`/home/${post.uuid}/edit`}>
-												<ActionIcon
-													color="blue"
-													variant="subtle"
-													size="sm"
-													aria-label="編集"
-												>
-													✎
-												</ActionIcon>
-											</Link>
-											<ActionIcon
-												color="red"
-												variant="subtle"
-												size="sm"
-												onClick={() => handleDeleteClick(post.uuid)}
-												aria-label="削除"
-											>
-												✕
-											</ActionIcon>
-										</Group>
-									</Group>
-									<Text size="sm" mb="xs">
-										{post.content}
-									</Text>
-									{/* タグ表示エリア */}
-									<Group gap={8} mb={8}>
-										{post.tags && post.tags.length > 0
-											? post.tags.map((tag, idx) => (
-													<Badge
-														key={tag}
-														variant="light"
-														color="blue"
-														size="sm"
-														radius="sm"
-													>
-														#{tag}
-													</Badge>
-												))
-											: null}
-									</Group>
-								</div>
-							</Group>
-						</Paper>
+							post={post}
+							tags={post.tags}
+							user={user}
+							index={index}
+							totalPosts={posts.length}
+							onDeleteClick={handleDeleteClick}
+						/>
 					))}
 				</Stack>
 			</div>
