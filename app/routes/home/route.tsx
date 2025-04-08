@@ -1,7 +1,14 @@
-import { Container, Stack } from "@mantine/core";
+import {
+	Button,
+	Container,
+	Group,
+	Pagination,
+	Stack,
+	Text,
+} from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
 import { drizzle } from "drizzle-orm/d1";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Outlet, useActionData } from "react-router";
 import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
@@ -13,9 +20,31 @@ import SearchForm from "~/components/SearchForm";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import { SplitTags } from "~/lib/validate/SplitTags";
 import type { Route } from "./+types/route";
-import { GetUserPosts, GetUserTagsWithPost } from "./GetPost";
+import {
+	DEFAULT_PAGE_SIZE,
+	GetUserPosts,
+	GetUserTagsWithPost,
+} from "./GetPost";
 
 const maxLength = 500;
+
+// 投稿の型を定義
+type PostType = typeof TablePosts.$inferSelect & { tags: string[] };
+
+// ページネーション型の定義
+type PaginationType = {
+	currentPage: number;
+	totalPages: number;
+	totalCount: number;
+	hasNextPage: boolean;
+	hasPrevPage: boolean;
+};
+
+// 結果型の定義
+type PostResultType = {
+	posts: PostType[];
+	pagination: PaginationType;
+};
 
 // 投稿用のスキーマを定義
 const postSchema = v.object({
@@ -82,47 +111,75 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 	const state = await AuthState(context.hono.context);
 
 	if (state.state !== "authed") {
-		return { posts: [], user: null };
+		return { posts: [], user: null, pagination: null };
 	}
 
-	// URLから検索タグを取得
+	// URLから検索タグとページ番号を取得
 	const url = new URL(request.url);
 	const searchParam = url.searchParams.get("search") || "";
 	const searchTags = SplitTags(searchParam);
+	const pageParam = url.searchParams.get("page");
+	const page = pageParam ? Number.parseInt(pageParam, 10) : 1;
 
-	let postsWithTags = [];
+	let result: PostResultType;
 
 	if (searchTags.length === 0) {
 		// 検索タグがない場合は全ての投稿とそのタグを取得
-		postsWithTags = await GetUserPosts(context, state.user.uuid);
+		result = await GetUserPosts(
+			context,
+			state.user.uuid,
+			page,
+			DEFAULT_PAGE_SIZE,
+		);
 	} else {
 		// 検索タグがある場合、タグに一致する投稿を取得
-		postsWithTags = await GetUserTagsWithPost(
+		result = await GetUserTagsWithPost(
 			context,
 			state.user.uuid,
 			searchTags,
+			page,
+			DEFAULT_PAGE_SIZE,
 		);
 
 		// 投稿が見つからない場合
-		if (postsWithTags.length === 0) {
-			return { posts: [], user: state.user, searchTags };
+		if (result.posts.length === 0) {
+			return {
+				posts: [],
+				user: state.user,
+				searchTags,
+				pagination: result.pagination,
+			};
 		}
 	}
 
-	return { posts: postsWithTags, user: state.user, searchTags };
+	return {
+		posts: result.posts,
+		user: state.user,
+		searchTags,
+		pagination: result.pagination,
+	};
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
 	const { postId } = useParams();
 	const navigate = useNavigate();
 	const lastResult = useActionData<typeof action>();
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	// 削除ボタンクリック時に対応する削除ページへ遷移
 	const handleDeleteClick = (postId: string) => {
 		navigate(`/home/${postId}/delete`);
 	};
 
-	const { posts, user, searchTags = [] } = loaderData;
+	// ページを変更する関数
+	const handlePageChange = (newPage: number) => {
+		// 現在のクエリパラメータを保持しながらページを更新
+		const newSearchParams = new URLSearchParams(searchParams);
+		newSearchParams.set("page", newPage.toString());
+		setSearchParams(newSearchParams);
+	};
+
+	const { posts, user, searchTags = [], pagination } = loaderData;
 
 	if (!user) {
 		return null;
@@ -148,18 +205,36 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				<SearchForm searchTags={searchTags} />
 
 				{/* 投稿一覧 */}
-				<Stack gap={0}>
-					{posts.map((post, index) => (
-						<Post
-							key={post.uuid}
-							post={post}
-							tags={post.tags}
-							user={user}
-							index={index}
-							totalPosts={posts.length}
-							onDeleteClick={handleDeleteClick}
-						/>
-					))}
+				<Stack gap={0} mb="xl">
+					{posts.length > 0 ? (
+						<>
+							{posts.map((post, index) => (
+								<Post
+									key={post.uuid}
+									post={post}
+									tags={post.tags}
+									user={user}
+									index={index}
+									totalPosts={posts.length}
+									onDeleteClick={handleDeleteClick}
+								/>
+							))}
+
+							{/* ページネーションコンポーネント - 常に表示 */}
+							<Group justify="center" mt="md">
+								<Pagination
+									total={pagination?.totalPages || 1}
+									value={pagination?.currentPage || 1}
+									onChange={handlePageChange}
+									withEdges
+								/>
+							</Group>
+						</>
+					) : (
+						<Text c="dimmed" ta="center" py="xl">
+							投稿が見つかりませんでした
+						</Text>
+					)}
 				</Stack>
 			</div>
 		</Container>
