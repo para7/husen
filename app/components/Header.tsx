@@ -1,6 +1,6 @@
 import { Avatar, Group, Paper, Title } from "@mantine/core";
-import SignOutButton from "~/components/SignOutButton";
 import ColorModeSwitch from "~/components/ColorModeSwitch";
+import SignOutButton from "~/components/SignOutButton";
 
 type HeaderProps = {
 	user: {

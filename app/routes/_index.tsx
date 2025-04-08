@@ -1,11 +1,11 @@
-import { Button, Container, Stack, Title, Group } from "@mantine/core";
+import { Button, Container, Group, Stack, Title } from "@mantine/core";
 import { Text } from "@mantine/core";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { redirect } from "react-router";
 import { TableUsers } from "server/db/schema";
-import type { Route } from "./+types/_index";
 import ColorModeSwitch from "~/components/ColorModeSwitch";
+import type { Route } from "./+types/_index";
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
 	const db = drizzle(context.cloudflare.env.DB);

@@ -1,15 +1,21 @@
 import { Container, Stack } from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { useNavigate, useParams } from "react-router";
-import { Outlet, useActionData } from "react-router";
+import {
+	Outlet,
+	useActionData,
+	useSearchParams,
+	useSubmit,
+} from "react-router";
 import { TablePosts, TableTags } from "server/db/schema";
 import * as v from "valibot";
 import Header from "~/components/Header";
 import Post from "~/components/Post";
 import PostForm from "~/components/PostForm";
 import Profile from "~/components/Profile";
+import SearchForm from "~/components/SearchForm";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
 import { SplitTags } from "~/lib/validate/SplitTags";
 import type { Route } from "./+types/route";
@@ -78,7 +84,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 	});
 };
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
 	const db = drizzle(context.cloudflare.env.DB);
 	const state = await AuthState(context.hono.context);
 
@@ -86,12 +92,74 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		return { posts: [], user: null };
 	}
 
-	// 投稿を取得
-	const posts = await db
-		.select()
-		.from(TablePosts)
-		.where(eq(TablePosts.user_id, state.user.uuid))
-		.orderBy(desc(TablePosts.order_date));
+	// URLから検索タグを取得
+	const url = new URL(request.url);
+	const searchParam = url.searchParams.get("search") || "";
+	const searchTags = SplitTags(searchParam);
+
+	// 投稿の型を定義
+	type PostType = typeof TablePosts.$inferSelect;
+	let posts: PostType[] = [];
+
+	if (searchTags.length === 0) {
+		// 検索タグがない場合は全ての投稿を取得
+		posts = await db
+			.select()
+			.from(TablePosts)
+			.where(eq(TablePosts.user_id, state.user.uuid))
+			.orderBy(desc(TablePosts.order_date));
+	} else {
+		// 検索タグがある場合は、それらのタグを全て含む投稿のIDを取得
+		// 結果の型を定義
+		type RawQueryResult = { post_id: string; tag_count: unknown };
+		interface TagCountResult {
+			post_id: string;
+			tag_count: number;
+		}
+
+		// SQLクエリを実行して結果を取得（明示的に型付け）
+		const tagCountsQuery: RawQueryResult[] = await db
+			.select({
+				post_id: TableTags.post_id,
+				tag_count: sql<unknown>`count(*)`,
+			})
+			.from(TableTags)
+			.where(
+				and(
+					eq(TableTags.user_id, state.user.uuid),
+					inArray(TableTags.tag_text, searchTags),
+				),
+			)
+			.groupBy(TableTags.post_id);
+
+		// クエリ結果を変換（数値型に明示的に変換）
+		const tagCounts: TagCountResult[] = tagCountsQuery.map((item) => ({
+			post_id: item.post_id,
+			tag_count: Number(item.tag_count),
+		}));
+
+		// 全てのタグを含む投稿のIDを抽出（タグの数とカウントが一致するもの）
+		const matchingPostIds = tagCounts
+			.filter((item) => item.tag_count === searchTags.length)
+			.map((item) => item.post_id);
+
+		if (matchingPostIds.length === 0) {
+			// 一致する投稿がない場合は空の配列を返す
+			return { posts: [], user: state.user, searchTags };
+		}
+
+		// 抽出した投稿IDを使って投稿を取得
+		posts = await db
+			.select()
+			.from(TablePosts)
+			.where(
+				and(
+					eq(TablePosts.user_id, state.user.uuid),
+					inArray(TablePosts.uuid, matchingPostIds),
+				),
+			)
+			.orderBy(desc(TablePosts.order_date));
+	}
 
 	// 各投稿のタグを取得
 	const postsWithTags = await Promise.all(
@@ -109,7 +177,7 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 		}),
 	);
 
-	return { posts: postsWithTags, user: state.user };
+	return { posts: postsWithTags, user: state.user, searchTags };
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
@@ -122,7 +190,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 		navigate(`/home/${postId}/delete`);
 	};
 
-	const { posts, user } = loaderData;
+	const { posts, user, searchTags = [] } = loaderData;
 
 	if (!user) {
 		return null;
@@ -143,6 +211,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
 				{/* 投稿フォーム */}
 				<PostForm lastResult={lastResult} maxLength={maxLength} />
+
+				{/* 検索フォーム */}
+				<SearchForm searchTags={searchTags} />
 
 				{/* 投稿一覧 */}
 				<Stack gap={0}>

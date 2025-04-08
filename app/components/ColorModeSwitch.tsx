@@ -1,9 +1,9 @@
 import {
 	ActionIcon,
-	useMantineColorScheme,
 	useComputedColorScheme,
+	useMantineColorScheme,
 } from "@mantine/core";
-import { IconSun, IconMoon } from "@tabler/icons-react";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 
 import { IconAdjustments } from "@tabler/icons-react";
 
