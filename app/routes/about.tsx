@@ -14,8 +14,7 @@ import {
 } from "@mantine/core";
 import {
 	IconArrowLeft,
-	IconBrandTwitter,
-	IconBulb,
+	IconPencil,
 	IconHistory,
 	IconInfoCircle,
 	IconNotes,
@@ -70,14 +69,14 @@ export default function About() {
 				<Box my="xl">
 					<Group gap="md" align="flex-start">
 						<ThemeIcon size="lg" radius="md" variant="light" color="blue">
-							<IconBrandTwitter size={20} />
+							<IconPencil size={20} />
 						</ThemeIcon>
 						<div>
 							<Text fw={600} mb={5}>
-								Twitter ぐらい手軽に書きたい
+								Twitter のように手軽に書きたい
 							</Text>
 							<Text c="dimmed" className={styles.description || ""}>
-								思いついたことをすぐに投稿できる手軽さを大切にしています。
+								思いついたことを気負わずに書き流せる
 							</Text>
 						</div>
 					</Group>
@@ -93,7 +92,7 @@ export default function About() {
 								過去の投稿を自由に振り返りたい
 							</Text>
 							<Text c="dimmed" className={styles.description || ""}>
-								時系列だけでなく、さまざまな切り口で過去の投稿を整理・閲覧できます。
+								タグ別で、無制限に過去の投稿を閲覧できる
 							</Text>
 						</div>
 					</Group>
@@ -109,7 +108,7 @@ export default function About() {
 								書き下し投稿を、後から整理出来るようにしたい
 							</Text>
 							<Text c="dimmed" className={styles.description || ""}>
-								投稿時は考えずに書き、後からタグやカテゴリで整理できる柔軟性があります。
+								投稿時は考えずに書いたものを、後から情報として整えることができる
 							</Text>
 						</div>
 					</Group>
