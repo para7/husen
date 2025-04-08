@@ -21,6 +21,7 @@ import {
 	IconSticker,
 } from "@tabler/icons-react";
 import styles from "../styles/about.module.css";
+import ColorModeSwitch from "~/components/ColorModeSwitch";
 
 export const meta = () => {
 	return [
@@ -44,10 +45,20 @@ export default function About() {
 
 	return (
 		<div className={styles.aboutContainer}>
-			<Anchor href="/" className={styles.backLink || ""}>
-				<IconArrowLeft size={16} />
-				<span>トップページに戻る</span>
-			</Anchor>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					marginBottom: "20px",
+				}}
+			>
+				<Anchor href="/" className={styles.backLink || ""}>
+					<IconArrowLeft size={16} />
+					<span>トップページに戻る</span>
+				</Anchor>
+				<ColorModeSwitch />
+			</div>
 
 			<header className={styles.header}>
 				<Title order={1} size="h1" fw={800} mb="xs">

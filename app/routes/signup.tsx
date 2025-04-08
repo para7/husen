@@ -15,7 +15,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { Form, redirect, useActionData } from "react-router";
 import { TableUsers } from "server/db/schema";
 import * as v from "valibot";
-import SignOutButton from "~/lib/SignOutButton";
+import SignOutButton from "~/components/SignOutButton";
 import type { Route } from "./+types/signup";
 // import { IconAlertCircle } from "@tabler/icons-react";
 

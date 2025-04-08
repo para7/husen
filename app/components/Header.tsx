@@ -1,5 +1,6 @@
 import { Avatar, Group, Paper, Title } from "@mantine/core";
-import SignOutButton from "~/lib/SignOutButton";
+import SignOutButton from "~/components/SignOutButton";
+import ColorModeSwitch from "~/components/ColorModeSwitch";
 
 type HeaderProps = {
 	user: {
@@ -26,7 +27,10 @@ export default function Header({ user }: HeaderProps) {
 					</Avatar>
 					<Title order={4}>ホーム</Title>
 				</Group>
-				<SignOutButton />
+				<Group>
+					<ColorModeSwitch />
+					<SignOutButton />
+				</Group>
 			</Group>
 		</Paper>
 	);
