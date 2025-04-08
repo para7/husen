@@ -176,7 +176,7 @@ export default function About() {
 							です。
 						</Text>
 						<Text className={styles.description || ""} mb="md">
-							予告なくデータ削除・サービス停止する場合がございます。
+							予告なくデータ削除・サービス停止する場合があります。
 						</Text>
 						<Text className={styles.description || ""} fw={500}>
 							自己責任でのご利用をお願いいたします。
