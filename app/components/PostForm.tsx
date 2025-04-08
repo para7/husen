@@ -120,7 +120,7 @@ export default function PostForm({
 					</div>
 
 					<TextInput
-						placeholder="タグをスペースで区切って入力"
+						placeholder="タグ"
 						{...getInputProps(tags, { type: "text" })}
 						leftSection={<Text size="sm">#</Text>}
 						description="スペースで区切って複数のタグを入力できます"
@@ -128,14 +128,14 @@ export default function PostForm({
 						onChange={handleTagsChange}
 					/>
 
-					<Checkbox
-						{...getInputProps(keepTags, { type: "checkbox" })}
-						label="タグを保持する"
-						defaultChecked={keepTagsState}
-						onChange={handleKeepTagsChange}
-					/>
+					<Group justify="space-between">
+						<Checkbox
+							{...getInputProps(keepTags, { type: "checkbox" })}
+							label="タグを保持する"
+							defaultChecked={keepTagsState}
+							onChange={handleKeepTagsChange}
+						/>
 
-					<Group justify="flex-end">
 						<input type="hidden" name="_action" value="post" />
 						<Button
 							type="submit"
