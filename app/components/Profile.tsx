@@ -11,6 +11,13 @@ type ProfileProps = {
 };
 
 export default function Profile({ user }: ProfileProps) {
+	const navigate = useNavigate();
+
+	// 編集ボタンクリック時にプロフィール編集ページへ遷移
+	const handleEditClick = () => {
+		navigate("/home/edit");
+	};
+
 	return (
 		<Paper withBorder mb="md">
 			<div
@@ -32,11 +39,10 @@ export default function Profile({ user }: ProfileProps) {
 						{user.user_name[0]}
 					</Avatar>
 					<Button
-						component="a"
-						href="/home/edit"
 						variant="outline"
 						radius="xl"
 						size="sm"
+						onClick={handleEditClick}
 					>
 						編集
 					</Button>

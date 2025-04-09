@@ -1,14 +1,7 @@
-import {
-	Button,
-	Container,
-	Group,
-	Pagination,
-	Stack,
-	Text,
-} from "@mantine/core";
+import { Container, Group, Pagination, Stack, Text } from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
 import { drizzle } from "drizzle-orm/d1";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Outlet, useActionData } from "react-router";
 import { TablePosts, TableTags, TableUsers } from "server/db/schema";
 import * as v from "valibot";
@@ -168,7 +161,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-	const { postId } = useParams();
 	const navigate = useNavigate();
 	const lastResult = useActionData<typeof action>();
 	const [searchParams, setSearchParams] = useSearchParams();
