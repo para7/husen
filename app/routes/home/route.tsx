@@ -10,7 +10,7 @@ import { parseWithValibot } from "conform-to-valibot";
 import { drizzle } from "drizzle-orm/d1";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Outlet, useActionData } from "react-router";
-import { TablePosts, TableTags } from "server/db/schema";
+import { TablePosts, TableTags, TableUsers } from "server/db/schema";
 import * as v from "valibot";
 import Header from "~/components/Header";
 import Post from "~/components/Post";
@@ -25,6 +25,7 @@ import {
 	GetUserPosts,
 	GetUserTagsWithPost,
 } from "./GetPost";
+import { eq } from "drizzle-orm";
 
 const maxLength = 500;
 
@@ -123,6 +124,12 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
 	let result: PostResultType;
 
+	const db = drizzle(context.cloudflare.env.DB);
+	const user = await db
+		.select()
+		.from(TableUsers)
+		.where(eq(TableUsers.uuid, state.user.uuid));
+
 	if (searchTags.length === 0) {
 		// 検索タグがない場合は全ての投稿とそのタグを取得
 		result = await GetUserPosts(
@@ -145,7 +152,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 		if (result.posts.length === 0) {
 			return {
 				posts: [],
-				user: state.user,
+				user: user[0],
 				searchTags,
 				pagination: result.pagination,
 			};
@@ -154,7 +161,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
 	return {
 		posts: result.posts,
-		user: state.user,
+		user: user[0],
 		searchTags,
 		pagination: result.pagination,
 	};

@@ -1,10 +1,12 @@
 import { Avatar, Button, Group, Paper, Text, Title } from "@mantine/core";
+import { useNavigate } from "react-router";
 
 type ProfileProps = {
 	user: {
 		uuid: string;
 		user_id: string;
 		user_name: string;
+		profile: string;
 	};
 };
 
@@ -29,7 +31,13 @@ export default function Profile({ user }: ProfileProps) {
 					>
 						{user.user_name[0]}
 					</Avatar>
-					<Button variant="outline" radius="xl" size="sm" disabled>
+					<Button
+						component="a"
+						href="/home/edit"
+						variant="outline"
+						radius="xl"
+						size="sm"
+					>
 						編集
 					</Button>
 				</Group>
@@ -40,7 +48,7 @@ export default function Profile({ user }: ProfileProps) {
 				</Text>
 
 				<Text size="sm" mb="md">
-					動作試験中
+					{user.profile || "プロフィールが設定されていません"}
 				</Text>
 			</div>
 		</Paper>
