@@ -8,6 +8,7 @@ import {
 	Stack,
 	Text,
 	Textarea,
+	TextInput,
 } from "@mantine/core";
 import { parseWithValibot } from "conform-to-valibot";
 import { eq } from "drizzle-orm";
@@ -20,10 +21,12 @@ import { AuthState } from "~/lib/domain/AuthState";
 import type { Route } from "./+types/route";
 
 const maxLength = 200;
+const usernameMaxLength = 30; // ユーザー名の最大長
 
 // プロフィール編集用のスキーマを定義
 const profileEditSchema = v.object({
 	profile: v.pipe(v.string(), v.maxLength(maxLength)),
+	username: v.pipe(v.string(), v.minLength(1), v.maxLength(usernameMaxLength)),
 	_action: v.literal("edit_profile"),
 });
 
@@ -39,7 +42,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 	}
 
 	// バリデーション成功時の処理
-	const { profile } = submission.value;
+	const { profile, username } = submission.value;
 	const state = await AuthState(context.hono.context);
 
 	if (state.state !== "authed") {
@@ -49,11 +52,12 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 	const db = drizzle(context.cloudflare.env.DB);
 	const currentDate = new Date().toISOString();
 
-	// プロフィールを更新
+	// プロフィールとユーザー名を更新
 	await db
 		.update(TableUsers)
 		.set({
 			profile: profile,
+			user_name: username,
 			updated_at: currentDate,
 		})
 		.where(eq(TableUsers.uuid, state.user.uuid));
@@ -89,7 +93,7 @@ export default function EditProfile() {
 	const navigate = useNavigate();
 	const [opened, setOpened] = useState(true);
 
-	const [form, { profile }] = useForm({
+	const [form, { profile, username }] = useForm({
 		onValidate({ formData }) {
 			return parseWithValibot(formData, { schema: profileEditSchema });
 		},
@@ -97,6 +101,7 @@ export default function EditProfile() {
 		shouldRevalidate: "onInput",
 		defaultValue: {
 			profile: user.profile,
+			username: user.user_name,
 		},
 	});
 
@@ -128,13 +133,46 @@ export default function EditProfile() {
 						</Alert>
 					)}
 
+					<div>
+						<Text size="sm" fw={500} mb={4}>
+							ユーザー名
+						</Text>
+						<TextInput
+							placeholder="ユーザー名"
+							{...getInputProps(username, { type: "text" })}
+							error={
+								username?.errors ||
+								(username?.value && username.value.length > usernameMaxLength)
+							}
+							defaultValue={user.user_name}
+						/>
+						<Text
+							size="sm"
+							c={
+								username?.value && username.value.length > usernameMaxLength
+									? "red"
+									: "dimmed"
+							}
+							style={{ textAlign: "right" }}
+						>
+							{username?.value?.length || user.user_name.length}/
+							{usernameMaxLength}
+						</Text>
+					</div>
+
 					<div style={{ position: "relative" }}>
+						<Text size="sm" fw={500} mb={4}>
+							自己紹介
+						</Text>
 						<Textarea
 							placeholder="自己紹介（200文字以内）"
 							minRows={3}
 							maxRows={8}
 							{...getInputProps(profile, { type: "text" })}
-							error={profile?.value && profile.value.length > maxLength}
+							error={
+								profile?.errors ||
+								(profile?.value && profile.value.length > maxLength)
+							}
 							defaultValue={user.profile}
 						/>
 						<Text
@@ -157,7 +195,12 @@ export default function EditProfile() {
 						<input type="hidden" name="_action" value="edit_profile" />
 						<Button
 							type="submit"
-							disabled={!profile?.value || profile.value.length > maxLength}
+							disabled={
+								!profile?.value ||
+								profile.value.length > maxLength ||
+								!username?.value ||
+								username.value.length > usernameMaxLength
+							}
 						>
 							更新する
 						</Button>
