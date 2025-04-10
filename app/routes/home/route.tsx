@@ -19,6 +19,8 @@ import {
 	GetUserTagsWithPost,
 } from "./GetPost";
 import { eq } from "drizzle-orm";
+import * as schemas from "server/db/schema";
+import { Suspense, use } from "react";
 
 const maxLength = 500;
 
@@ -117,7 +119,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
 	let result: PostResultType;
 
-	const db = drizzle(context.cloudflare.env.DB);
+	const db = drizzle(context.cloudflare.env.DB, { schema: schemas });
 	const user = await db
 		.select()
 		.from(TableUsers)
@@ -125,39 +127,76 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
 	if (searchTags.length === 0) {
 		// 検索タグがない場合は全ての投稿とそのタグを取得
-		result = await GetUserPosts(
-			context,
-			state.user.uuid,
-			page,
-			DEFAULT_PAGE_SIZE,
-		);
-	} else {
-		// 検索タグがある場合、タグに一致する投稿を取得
-		result = await GetUserTagsWithPost(
+		return {
+			posts: GetUserPosts(context, state.user.uuid, page, DEFAULT_PAGE_SIZE),
+			user: user[0],
+			searchTags,
+		};
+	}
+
+	return {
+		posts: GetUserTagsWithPost(
 			context,
 			state.user.uuid,
 			searchTags,
 			page,
 			DEFAULT_PAGE_SIZE,
-		);
-
-		// 投稿が見つからない場合
-		if (result.posts.length === 0) {
-			return {
-				posts: [],
-				user: user[0],
-				searchTags,
-				pagination: result.pagination,
-			};
-		}
-	}
-
-	return {
-		posts: result.posts,
+		),
 		user: user[0],
 		searchTags,
-		pagination: result.pagination,
 	};
+};
+
+const Timeline: React.FC<{
+	posts: Promise<PostResultType>;
+	user: typeof TableUsers.$inferSelect;
+	searchTags: string[];
+	// pagination: PaginationType;
+}> = ({ posts: _posts, user, searchTags }) => {
+	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	// 削除ボタンクリック時に対応する削除ページへ遷移
+	const handleDeleteClick = (postId: string) => {
+		navigate(`/home/${postId}/delete`);
+	};
+
+	// ページを変更する関数
+	const handlePageChange = (newPage: number) => {
+		// 現在のクエリパラメータを保持しながらページを更新
+		const newSearchParams = new URLSearchParams(searchParams);
+		newSearchParams.set("page", newPage.toString());
+		setSearchParams(newSearchParams);
+	};
+
+	const result = use(_posts);
+	const { posts, pagination } = result;
+
+	return (
+		<Stack gap={0} mb="xl">
+			{posts.map((post, index) => (
+				<Post
+					key={post.uuid}
+					post={post}
+					tags={post.tags}
+					user={user}
+					index={index}
+					totalPosts={posts.length}
+					onDeleteClick={handleDeleteClick}
+				/>
+			))}
+
+			{/* ページネーションコンポーネント - 常に表示 */}
+			<Group justify="center" mt="md">
+				<Pagination
+					total={pagination?.totalPages || 1}
+					value={pagination?.currentPage || 1}
+					onChange={handlePageChange}
+					withEdges
+				/>
+			</Group>
+		</Stack>
+	);
 };
 
 export default function Index({ loaderData }: Route.ComponentProps) {
@@ -203,38 +242,15 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 				{/* 検索フォーム */}
 				<SearchForm searchTags={searchTags} />
 
-				{/* 投稿一覧 */}
-				<Stack gap={0} mb="xl">
-					{posts.length > 0 ? (
-						<>
-							{posts.map((post, index) => (
-								<Post
-									key={post.uuid}
-									post={post}
-									tags={post.tags}
-									user={user}
-									index={index}
-									totalPosts={posts.length}
-									onDeleteClick={handleDeleteClick}
-								/>
-							))}
-
-							{/* ページネーションコンポーネント - 常に表示 */}
-							<Group justify="center" mt="md">
-								<Pagination
-									total={pagination?.totalPages || 1}
-									value={pagination?.currentPage || 1}
-									onChange={handlePageChange}
-									withEdges
-								/>
-							</Group>
-						</>
-					) : (
-						<Text c="dimmed" ta="center" py="xl">
-							投稿が見つかりませんでした
-						</Text>
-					)}
-				</Stack>
+				<Suspense>
+					{/* 投稿一覧 */}
+					<Timeline
+						posts={posts}
+						user={user}
+						searchTags={searchTags}
+						// pagination={pagination}
+					/>
+				</Suspense>
 			</div>
 		</Container>
 	);
