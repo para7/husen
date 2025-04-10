@@ -117,8 +117,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 	const pageParam = url.searchParams.get("page");
 	const page = pageParam ? Number.parseInt(pageParam, 10) : 1;
 
-	let result: PostResultType;
-
 	const db = drizzle(context.cloudflare.env.DB, { schema: schemas });
 	const user = await db
 		.select()
@@ -217,7 +215,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 		setSearchParams(newSearchParams);
 	};
 
-	const { posts, user, searchTags = [], pagination } = loaderData;
+	const { posts, user, searchTags = [] } = loaderData;
 
 	if (!user) {
 		return null;
@@ -226,7 +224,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 	return (
 		<Container size="md" p={0}>
 			{/* ヘッダー部分 */}
-			<Header user={user} />
+			<Header user={user} title="ホーム" />
 
 			{/* Outletを追加してネストされたルートをレンダリング */}
 			<Outlet />

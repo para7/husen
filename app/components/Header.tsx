@@ -6,9 +6,10 @@ type HeaderProps = {
 	user: {
 		user_name: string;
 	};
+	title: string;
 };
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ user, title }: HeaderProps) {
 	return (
 		<Paper
 			shadow="xs"
@@ -25,7 +26,7 @@ export default function Header({ user }: HeaderProps) {
 					<Avatar radius="xl" size={32} color="blue">
 						{user.user_name[0]}
 					</Avatar>
-					<Title order={4}>ホーム</Title>
+					<Title order={4}>{title}</Title>
 				</Group>
 				<Group>
 					<ColorModeSwitch />
