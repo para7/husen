@@ -1,21 +1,21 @@
 import {
-	Container,
-	Table,
-	Title,
-	Text,
-	Stack,
 	Button,
 	Card,
+	Container,
 	Group,
 	Paper,
+	Stack,
+	Table,
+	Text,
+	Title,
 } from "@mantine/core";
 import { drizzle } from "drizzle-orm/d1";
-import { TableUsers } from "server/db/schema";
 import { useLoaderData } from "react-router";
+import { TableUsers } from "server/db/schema";
 import ColorModeSwitch from "~/components/ColorModeSwitch";
-import type { Route } from "./+types/users";
 import Header from "~/components/Header";
 import { GetAuthRemix } from "~/lib/domain/AuthState";
+import type { Route } from "./+types/users";
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
 	const db = drizzle(context.cloudflare.env.DB);

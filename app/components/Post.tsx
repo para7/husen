@@ -14,6 +14,7 @@ type PostProps = {
 		user_id: string;
 		user_name: string;
 	};
+	isEditable: boolean;
 	index: number;
 	totalPosts: number;
 	onDeleteClick: (postId: string) => void;
@@ -23,6 +24,7 @@ export default function Post({
 	post,
 	tags,
 	user,
+	isEditable,
 	index,
 	totalPosts,
 	onDeleteClick,
@@ -66,16 +68,18 @@ export default function Post({
 							</Group>
 						</div>
 						<Group gap={8}>
-							<Link to={`/home/${post.uuid}/edit`}>
-								<ActionIcon
-									color="blue"
-									variant="subtle"
-									size="sm"
-									aria-label="編集"
-								>
-									<IconEdit size={16} stroke={1.5} />
-								</ActionIcon>
-							</Link>
+							{isEditable && (
+								<Link to={`/home/${post.uuid}/edit`}>
+									<ActionIcon
+										color="blue"
+										variant="subtle"
+										size="sm"
+										aria-label="編集"
+									>
+										<IconEdit size={16} stroke={1.5} />
+									</ActionIcon>
+								</Link>
+							)}
 							<ActionIcon
 								color="red"
 								variant="subtle"

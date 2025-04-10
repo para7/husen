@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { TablePosts, TableTags } from "server/db/schema";
-import type { Route } from "./+types/route";
+import type { Route } from "../../routes/home/+types/route";
 
 // 投稿の型を定義
 type PostType = typeof TablePosts.$inferSelect;

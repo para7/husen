@@ -14,12 +14,12 @@ import PostForm from "~/components/PostForm";
 import Profile from "~/components/Profile";
 import SearchForm from "~/components/SearchForm";
 import { AuthState, GetAuthRemix } from "~/lib/domain/AuthState";
-import { SplitTags } from "~/lib/validate/SplitTags";
 import {
 	DEFAULT_PAGE_SIZE,
 	GetUserPosts,
 	GetUserTagsWithPost,
-} from "../../lib/driver/GetPost";
+} from "~/lib/driver/GetPost";
+import { SplitTags } from "~/lib/validate/SplitTags";
 import type { Route } from "./+types/route";
 
 const maxLength = 500;
@@ -174,7 +174,7 @@ const Timeline: React.FC<{
 		<Stack gap={0} mb="xl">
 			{posts.map((post, index) => (
 				<Post
-					isEditable={true}
+					isEditable={false}
 					key={post.uuid}
 					post={post}
 					tags={post.tags}
@@ -227,16 +227,10 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 			{/* ヘッダー部分 */}
 			<Header user={user} title="ホーム" />
 
-			{/* Outletを追加してネストされたルートをレンダリング */}
-			<Outlet />
-
 			{/* メインコンテンツ */}
 			<div>
 				{/* プロフィールセクション */}
-				<Profile user={user} isEditable={true} />
-
-				{/* 投稿フォーム */}
-				<PostForm lastResult={lastResult} maxLength={maxLength} />
+				<Profile user={user} isEditable={false} />
 
 				{/* 検索フォーム */}
 				<SearchForm searchTags={searchTags} />

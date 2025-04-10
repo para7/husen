@@ -8,9 +8,10 @@ type ProfileProps = {
 		user_name: string;
 		profile: string;
 	};
+	isEditable: boolean;
 };
 
-export default function Profile({ user }: ProfileProps) {
+export default function Profile({ user, isEditable }: ProfileProps) {
 	const navigate = useNavigate();
 
 	// 編集ボタンクリック時にプロフィール編集ページへ遷移
@@ -38,14 +39,17 @@ export default function Profile({ user }: ProfileProps) {
 					>
 						{user.user_name[0]}
 					</Avatar>
-					<Button
-						variant="outline"
-						radius="xl"
-						size="sm"
-						onClick={handleEditClick}
-					>
-						編集
-					</Button>
+
+					{isEditable && (
+						<Button
+							variant="outline"
+							radius="xl"
+							size="sm"
+							onClick={handleEditClick}
+						>
+							編集
+						</Button>
+					)}
 				</Group>
 
 				<Title order={4}>{user.user_name}</Title>
